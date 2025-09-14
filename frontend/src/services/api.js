@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// Configuración base de Axios
-const API_BASE_URL = 'http://localhost:8000'; // Ajusta si tu backend tiene diferente url/puerto
+// Obtén el valor de la variable de entorno definida por Vite
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -9,6 +9,9 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+// ...el resto de tu código permanece igual...
+
 
 // Interceptor para agregar token automáticamente
 api.interceptors.request.use(
