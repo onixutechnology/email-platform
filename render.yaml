@@ -1,0 +1,9 @@
+# render.yaml
+services:
+  - type: web
+    name: email-platform-api
+    env: python
+    plan: starter
+    buildCommand: pip install -r app/requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port 10000
+    pythonVersion: 3.12.3
