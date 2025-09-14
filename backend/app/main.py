@@ -23,7 +23,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
-        "https://email-platform-ma5m.onrender.com"
+        "https://email-platform-na5m.onrender.com"
     ],
     allow_credentials=True,
     allow_methods=["*"],
