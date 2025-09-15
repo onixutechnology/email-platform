@@ -1,7 +1,42 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import api from '../services/api';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+
+// Componente para subir imágenes
+function ImageUploader({ onUploaded }) {
+  const [loading, setLoading] = useState(false);
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setLoading(true);
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await fetch("https://email-platform-api-j0fg.onrender.com/upload-image/", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await response.json();
+      const url = `https://email-platform-api-j0fg.onrender.com${data.url}`;
+      onUploaded(url); // Inserta la imagen en el correo (via Quill)
+    } catch (err) {
+      alert("Error al subir imagen");
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div style={{ marginBottom: "12px" }}>
+      <label className="block text-sm font-medium text-gray-700">Adjuntar imagen al mensaje</label>
+      <input type="file" accept="image/*" onChange={handleFileChange} disabled={loading} />
+      {loading && <span className="text-xs text-gray-500 ml-2">Subiendo...</span>}
+    </div>
+  );
+}
 
 const EmailCompose = () => {
   const [formData, setFormData] = useState({
@@ -13,6 +48,8 @@ const EmailCompose = () => {
   const [mailboxes, setMailboxes] = useState([]);
   const [status, setStatus] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const quillRef = useRef(null);
 
   useEffect(() => {
     const fetchMailboxes = async () => {
@@ -40,17 +77,27 @@ const EmailCompose = () => {
     }));
   };
 
+  // Insertar imagen usando API de Quill
+  const insertImageInQuill = (imageUrl) => {
+    const editor = quillRef.current.getEditor();
+    const range = editor.getSelection(true);
+    editor.insertEmbed(range ? range.index : 0, "image", imageUrl);
+    setFormData(prev => ({
+      ...prev,
+      body: editor.root.innerHTML
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setStatus('');
-
     try {
       const emailData = {
         to: formData.to,
         subject: formData.subject,
         body: 'Este correo requiere visualizar HTML.', // Texto plano opcional
-      html_body: formData.body,
+        html_body: formData.body,
       };
       if (formData.mailbox_id && formData.mailbox_id !== '') {
         emailData.mailbox_id = parseInt(formData.mailbox_id);
@@ -58,6 +105,7 @@ const EmailCompose = () => {
       await api.post('/emails/send', emailData);
       setStatus('¡Correo enviado exitosamente!');
       setFormData({ to: '', subject: '', body: '', mailbox_id: '' });
+      quillRef.current.getEditor().setContents([]); // Limpia el editor Quill
     } catch (error) {
       setStatus('Error al enviar correo: ' + (error.response?.data?.detail || error.message));
     }
@@ -120,9 +168,11 @@ const EmailCompose = () => {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Mensaje (formato HTML permitido)
+              Mensaje HTML con imágenes adjuntas
             </label>
+            <ImageUploader onUploaded={insertImageInQuill} />
             <ReactQuill
+              ref={quillRef}
               theme="snow"
               value={formData.body}
               onChange={handleQuillChange}
