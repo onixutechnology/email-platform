@@ -4,7 +4,6 @@ import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import ImageGallery from "./ImageGallery";
 
-
 // Componente para subir imágenes
 function ImageUploader({ onUploaded }) {
   const [loading, setLoading] = useState(false);
@@ -50,6 +49,7 @@ const EmailCompose = () => {
   const [mailboxes, setMailboxes] = useState([]);
   const [status, setStatus] = useState('');
   const [loading, setLoading] = useState(false);
+  const [galleryRefresh, setGalleryRefresh] = useState(0); // Estado para refrescar galería
 
   const quillRef = useRef(null);
 
@@ -88,6 +88,12 @@ const EmailCompose = () => {
       ...prev,
       body: editor.root.innerHTML
     }));
+  };
+
+  // Maneja subida de imagen y refresca galería
+  const handleImageUploaded = (imageUrl) => {
+    insertImageInQuill(imageUrl);
+    setGalleryRefresh(val => val + 1); // fuerza actualización de galería
   };
 
   const handleSubmit = async (e) => {
@@ -169,21 +175,20 @@ const EmailCompose = () => {
             />
           </div>
           <div>
-  <label className="block text-sm font-medium text-gray-700">
-    Mensaje HTML con imágenes adjuntas
-  </label>
-  <ImageUploader onUploaded={insertImageInQuill} />
-  <ImageGallery onSelect={insertImageInQuill} />   {/* <- Añade aquí */}
-  <ReactQuill
-    ref={quillRef}
-    theme="snow"
-    value={formData.body}
-    onChange={handleQuillChange}
-    className="bg-white"
-    style={{ minHeight: "150px" }}
-  />
-</div>
-
+            <label className="block text-sm font-medium text-gray-700">
+              Mensaje HTML con imágenes adjuntas
+            </label>
+            <ImageUploader onUploaded={handleImageUploaded} />
+            <ImageGallery onSelect={insertImageInQuill} refreshTrigger={galleryRefresh} />
+            <ReactQuill
+              ref={quillRef}
+              theme="snow"
+              value={formData.body}
+              onChange={handleQuillChange}
+              className="bg-white"
+              style={{ minHeight: "150px" }}
+            />
+          </div>
           <div className="mt-4 mb-2 p-3 border rounded bg-gray-50">
             <label className="block text-xs font-bold text-gray-400 mb-1">Vista previa mensaje HTML:</label>
             <div dangerouslySetInnerHTML={{ __html: formData.body }} />

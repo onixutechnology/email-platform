@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-function ImageGallery({ onSelect }) {
+function ImageGallery({ onSelect, refreshTrigger }) {
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -17,21 +17,22 @@ function ImageGallery({ onSelect }) {
       setLoading(false);
     };
     fetchGallery();
-  }, []);
+  }, [refreshTrigger]); // Se actualiza cada vez que refreshTrigger cambia
 
   return (
     <div style={{ marginBottom: "16px" }}>
       <label className="block text-sm font-medium text-gray-700 mb-2">Galería de Imágenes</label>
-      {loading && <span>Cargando imágenes...</span>}
+      {loading && <span className="text-xs text-gray-500">Cargando imágenes...</span>}
       <div style={{
         display: "flex",
         flexWrap: "wrap",
         gap: "10px",
         border: "1px solid #eee",
         padding: "8px",
-        background: "#fafafa"
+        background: "#fafafa",
+        minHeight: "60px"
       }}>
-        {images.length === 0 && !loading && <span>No hay imágenes subidas aún.</span>}
+        {images.length === 0 && !loading && <span className="text-sm text-gray-500">No hay imágenes subidas aún.</span>}
         {images.map(img => (
           <div key={img.filename} style={{ textAlign: "center" }}>
             <img
@@ -47,9 +48,9 @@ function ImageGallery({ onSelect }) {
                 boxShadow: "1px 1px 3px #eee"
               }}
               onClick={() => onSelect(`https://email-platform-api-j0fg.onrender.com${img.url}`)}
-              title="Insertar imagen"
+              title="Insertar imagen en el correo"
             />
-            <div style={{ fontSize: 10, marginTop: 2 }}>{img.filename}</div>
+            <div style={{ fontSize: 10, marginTop: 2, color: "#666" }}>{img.filename}</div>
           </div>
         ))}
       </div>
