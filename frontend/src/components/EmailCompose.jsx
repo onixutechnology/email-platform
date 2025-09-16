@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import api from '../services/api';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+import ImageGallery from "./ImageGallery";
+
 
 // Componente para subir imágenes
 function ImageUploader({ onUploaded }) {
@@ -167,19 +169,21 @@ const EmailCompose = () => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Mensaje HTML con imágenes adjuntas
-            </label>
-            <ImageUploader onUploaded={insertImageInQuill} />
-            <ReactQuill
-              ref={quillRef}
-              theme="snow"
-              value={formData.body}
-              onChange={handleQuillChange}
-              className="bg-white"
-              style={{ minHeight: "150px" }}
-            />
-          </div>
+  <label className="block text-sm font-medium text-gray-700">
+    Mensaje HTML con imágenes adjuntas
+  </label>
+  <ImageUploader onUploaded={insertImageInQuill} />
+  <ImageGallery onSelect={insertImageInQuill} />   {/* <- Añade aquí */}
+  <ReactQuill
+    ref={quillRef}
+    theme="snow"
+    value={formData.body}
+    onChange={handleQuillChange}
+    className="bg-white"
+    style={{ minHeight: "150px" }}
+  />
+</div>
+
           <div className="mt-4 mb-2 p-3 border rounded bg-gray-50">
             <label className="block text-xs font-bold text-gray-400 mb-1">Vista previa mensaje HTML:</label>
             <div dangerouslySetInnerHTML={{ __html: formData.body }} />
