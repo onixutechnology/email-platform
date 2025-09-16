@@ -1,3 +1,4 @@
+import os
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -23,11 +24,26 @@ from app.models.mailbox import Mailbox
 from app.auth.auth import get_current_active_user
 from app.models.user import User
 
+from fastapi import Request, Response
+from sqlalchemy import update
+from datetime import datetime
+
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/emails", tags=["emails"])
+
+def add_tracking_pixel(html_body: str, email_log_id: int) -> str:
+    """Agrega pixel de tracking al HTML"""
+    if html_body:
+        pixel_url = f"https://email-platform-api-j0fg.onrender.com/track/open/{email_log_id}.png"
+        tracking_pixel = f'<img src="{pixel_url}" width="1" height="1" style="display:none;" />'
+        if "</body>" in html_body:
+            html_body = html_body.replace("</body>", f"{tracking_pixel}</body>")
+        else:
+            html_body += tracking_pixel
+    return html_body
 
 # Modelos Pydantic
 class EmailSend(BaseModel):
@@ -38,6 +54,8 @@ class EmailSend(BaseModel):
     mailbox_id: Optional[int] = None
     cc: Optional[List[EmailStr]] = None
     bcc: Optional[List[EmailStr]] = None
+    attachments: Optional[List[str]] = None  # ← AGREGAR ESTA LÍNEA
+ 
 
 class EmailResponse(BaseModel):
     id: int
@@ -48,6 +66,7 @@ class EmailResponse(BaseModel):
     created_at: str
     error_message: Optional[str]
     mailbox_id: int
+    opened_at: Optional[str] = None
 
 class EmailStats(BaseModel):
     total_sent: int
@@ -81,7 +100,8 @@ class EmailSender:
     async def send_via_smtp(mailbox: Mailbox, to_email: str, subject: str, 
                            body: str, html_body: Optional[str] = None,
                            cc: Optional[List[str]] = None, 
-                           bcc: Optional[List[str]] = None) -> Dict[str, Any]:
+                           bcc: Optional[List[str]] = None,
+                           attachments: Optional[List[str]] = None) -> Dict[str, Any]:  # ← AGREGAR ESTE PARÁMETRO
         """Envía email vía SMTP (Gmail, Outlook, etc.)"""
         try:
             settings = json.loads(mailbox.settings)
@@ -123,7 +143,25 @@ class EmailSender:
                 msg['Cc'] = ', '.join(cc)
             if bcc:
                 msg['Bcc'] = ', '.join(bcc)
+
             
+
+                    # ← AGREGAR AQUÍ - Soporte para adjuntos
+            if attachments:
+             for file_path in attachments:
+
+                if os.path.exists(file_path):
+                    with open(file_path, "rb") as attachment:
+                        part = MIMEBase('application', 'octet-stream')
+                        part.set_payload(attachment.read())
+                        encoders.encode_base64(part)
+                        part.add_header(
+                            'Content-Disposition',
+                            f'attachment; filename= {os.path.basename(file_path)}'
+                        )
+                        msg.attach(part)
+
+
             # Agregar cuerpo de texto plano
             msg.attach(MIMEText(body, 'plain', 'utf-8'))
             
@@ -133,7 +171,8 @@ class EmailSender:
             
             # Conectar y enviar
             server = smtplib.SMTP(smtp_host, smtp_port)
-            
+
+
             if use_tls:
                 server.starttls()
             
@@ -281,6 +320,7 @@ async def send_email_background(
     html_body: Optional[str] = None,
     cc: Optional[List[str]] = None,
     bcc: Optional[List[str]] = None,
+    attachments: Optional[List[str]] = None,  # ← AGREGAR ESTE PARÁMETRO
     retry_count: int = 0
 ):
     """Función para enviar email en background con reintentos"""
@@ -295,7 +335,14 @@ async def send_email_background(
         mailbox_id=mailbox.id,
         status="pending"
     )
+
+    db.add(email_log)
+    await db.commit()
+    await db.refresh(email_log)   # ← ¡ESTO ES CRUCIAL para obtener el id real de la BD!
     
+    if html_body:
+      html_body = add_tracking_pixel(html_body, email_log.id)
+
     try:
         logger.info(f"🚀 ENVIANDO EMAIL (Intento {retry_count + 1}/3):")
         logger.info(f"   Desde: {mailbox.email}")
@@ -313,7 +360,7 @@ async def send_email_background(
         
         if provider_lower in ['gmail', 'outlook', 'yahoo', 'smtp']:
             result = await sender.send_via_smtp(
-                mailbox, to_email, subject, body, html_body, cc, bcc
+                mailbox, to_email, subject, body, html_body, cc, bcc, attachments
             )
         elif provider_lower == 'ses':
             result = await sender.send_via_ses(
@@ -332,6 +379,9 @@ async def send_email_background(
         else:
             raise Exception(result['error'])
             
+
+
+
     except Exception as e:
         error_msg = str(e)
         logger.error(f"❌ Error enviando email: {error_msg}")
@@ -342,7 +392,7 @@ async def send_email_background(
             await asyncio.sleep(30)
             return await send_email_background(
                 to_email, subject, body, mailbox, user_id, db, 
-                html_body, cc, bcc, retry_count + 1
+                html_body, cc, bcc, attachments, retry_count + 1
             )
         else:
             email_log.status = "failed"
@@ -355,6 +405,31 @@ async def send_email_background(
 
 
 # Endpoints
+@router.get("/track/open/{email_id}.png")
+async def track_email_open(
+    email_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db)
+):
+    """Registrar apertura de email y devolver pixel transparente"""
+    # Buscar log
+    result = await db.execute(
+        select(EmailLog).where(EmailLog.id == email_id)
+    )
+    log = result.scalar_one_or_none()
+    
+    if log and not log.opened_at:
+        log.opened_at = datetime.utcnow()  # ← Necesita columna en el modelo
+        await db.commit()
+    
+    # Puede opcionalmente guardar IP o user-agent (privacidad/GDPR)
+    transparent_gif = (
+        b'GIF89a\x01\x00\x01\x00\x80\x00\x00\xff\xff\xff'
+        b'\x00\x00\x00!\xf9\x04\x01\x00\x00\x00\x00,'
+        b'\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02\x04\x01\x00;'
+    )
+    return Response(content=transparent_gif, media_type="image/gif")
+
 @router.post("/send")
 async def send_email(
     email_data: EmailSend,
@@ -397,6 +472,15 @@ async def send_email(
             detail="No hay buzones disponibles o verificados"
         )
     
+    # Validación HTML
+    if email_data.html_body:
+      email_data.html_body = email_data.html_body.strip()
+    # Opcional: agregar tracking pixel
+    # email_data.html_body = add_tracking_pixel(email_data.html_body, future_log_id)
+
+
+
+
     logger.info(f"📫 Usando mailbox: {mailbox.email} ({mailbox.provider})")
     
     # Rate limiting básico (opcional)
@@ -413,7 +497,9 @@ async def send_email(
         db,
         email_data.html_body,
         email_data.cc,
-        email_data.bcc
+        email_data.bcc,
+        email_data.attachments  # ← AGREGAR ESTA LÍNEA
+
     )
     
     return {
@@ -450,7 +536,8 @@ async def get_email_history(
             status=e.status,
             created_at=e.created_at.isoformat(),
             error_message=e.error_message,
-            mailbox_id=e.mailbox_id
+            mailbox_id=e.mailbox_id,
+            opened_at=e.opened_at.isoformat() if e.opened_at else None
         ) for e in emails
     ]
 

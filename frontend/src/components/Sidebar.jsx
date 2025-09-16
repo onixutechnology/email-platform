@@ -7,7 +7,7 @@ const Sidebar = () => {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Definir menú SIN filtrado por roles temporalmente para debug
+  // Menú con seguimiento de aperturas
   const menuItems = [
     {
       name: 'Dashboard',
@@ -25,6 +25,11 @@ const Sidebar = () => {
       icon: '✍️'
     },
     {
+      name: 'Aperturas de Correos',    // NUEVO MENÚ
+      href: '/emails/opens',
+      icon: '📬'
+    },
+    {
       name: 'Configuración',
       href: '/settings',
       icon: '⚙️'
@@ -36,13 +41,7 @@ const Sidebar = () => {
     }
   ];
 
-  // Por ahora, mostrar todos los elementos (sin filtrar por roles)
   const filteredItems = menuItems;
-
-  // Debug: verificar qué se está renderizando
-  console.log('Sidebar rendered');
-  console.log('Menu items:', filteredItems);
-  console.log('Current path:', location.pathname);
 
   const handleLogout = () => {
     if (window.confirm('¿Estás seguro de que deseas cerrar sesión?')) {
@@ -72,7 +71,7 @@ const Sidebar = () => {
             </h1>
           </div>
 
-          {/* Navigation - FORZAR VISIBILIDAD */}
+          {/* Navigation */}
           <nav className="flex-1 px-3 py-4 space-y-2">
             {filteredItems.map((item, index) => (
               <Link
@@ -89,7 +88,6 @@ const Sidebar = () => {
                 <span className="text-white">{item.name}</span>
               </Link>
             ))}
-            
             {/* Debug: Elemento de prueba siempre visible */}
             <div className="px-4 py-2 bg-red-500 text-white rounded">
               DEBUG: {filteredItems.length} items

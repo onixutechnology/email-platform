@@ -1,5 +1,8 @@
 {
   "dependencies": {
+    "@mui/icons-material": "^7.3.2",
+    "@mui/material": "^7.3.2",
+    "emoji-picker-react": "^4.13.3",
     "quill-image-resize-module-react": "^3.0.0",
     "quill-resize-image": "^1.0.11",
     "react-easy-crop": "^5.5.1",

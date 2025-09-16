@@ -7,7 +7,8 @@ import EmailCompose from './components/EmailCompose';
 import DomainsPanel from './components/DomainsPanel';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
-import Mailbox from './components/Mailbox';  // ← AGREGAR ESTA LÍNEA
+import Mailbox from './components/Mailbox';
+import EmailOpensDashboard from './components/EmailOpensDashboard';
 
 function App() {
   return (
@@ -15,17 +16,13 @@ function App() {
       <EmailProvider>
         <Router>
           <Routes>
-            {/* Ruta de LOGIN - ESTA ERA LA QUE FALTABA */}
             <Route path="/login" element={<LoginPage />} />
-            
-            {/* Rutas protegidas */}
             <Route path="/" element={<ProtectedDashboard />} />
             <Route path="/compose" element={<ProtectedCompose />} />
             <Route path="/settings" element={<ProtectedSettings />} />
             <Route path="/mailboxes" element={<ProtectedMailboxes />} />
             <Route path="/users" element={<ProtectedUsers />} />
-            
-            {/* Redirigir rutas no encontradas */}
+            <Route path="/emails/opens" element={<ProtectedOpens />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Router>
@@ -34,32 +31,22 @@ function App() {
   );
 }
 
-// Componente para la página de login
+// Página de login
 function LoginPage() {
   const { isAuthenticated } = useAuth();
-  
-  // Si ya está autenticado, redirigir al dashboard
-  if (isAuthenticated) {
-    return <Navigate to="/" replace />;
-  }
-  
+  if (isAuthenticated) return <Navigate to="/" replace />;
   return <LoginForm />;
 }
 
-// Componente para dashboard protegido
+// Dashboard principal protegido
 function ProtectedDashboard() {
   const { isAuthenticated, loading } = useAuth();
-  
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">
       <div className="text-lg">Cargando...</div>
     </div>;
   }
-  
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-  
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
   return (
     <Dashboard>
       <div className="bg-white overflow-hidden shadow rounded-lg">
@@ -85,13 +72,23 @@ function ProtectedDashboard() {
   );
 }
 
-// Componente para redactar correo protegido
-function ProtectedCompose() {
+// Aperturas protegido
+function ProtectedOpens() {
   const { isAuthenticated, loading } = useAuth();
-  
   if (loading) return <div>Cargando...</div>;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
-  
+  return (
+    <Dashboard>
+      <EmailOpensDashboard />
+    </Dashboard>
+  );
+}
+
+// Componer correo protegido
+function ProtectedCompose() {
+  const { isAuthenticated, loading } = useAuth();
+  if (loading) return <div>Cargando...</div>;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
   return (
     <Dashboard>
       <EmailCompose />
@@ -99,13 +96,11 @@ function ProtectedCompose() {
   );
 }
 
-// Componente para configuración protegido
+// Configuración protegida
 function ProtectedSettings() {
   const { isAuthenticated, loading } = useAuth();
-  
   if (loading) return <div>Cargando...</div>;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
-  
   return (
     <Dashboard>
       <DomainsPanel />
@@ -113,16 +108,14 @@ function ProtectedSettings() {
   );
 }
 
-// Componente para buzones protegido
+// Buzones protegido
 function ProtectedMailboxes() {
   const { isAuthenticated, loading } = useAuth();
-  
   if (loading) return <div>Cargando...</div>;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
-  
   return (
     <Dashboard>
-        <Mailbox />  {/* ← Usar tu componente real en lugar del placeholder */}
+      <Mailbox />
       <div className="bg-white p-6 rounded-lg shadow">
         <h3 className="text-lg font-medium mb-4">Buzones</h3>
         <p>Panel de buzones próximamente...</p>
@@ -131,13 +124,11 @@ function ProtectedMailboxes() {
   );
 }
 
-// Componente para usuarios protegido
+// Usuarios protegido
 function ProtectedUsers() {
   const { isAuthenticated, loading } = useAuth();
-  
   if (loading) return <div>Cargando...</div>;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
-  
   return (
     <Dashboard>
       <div className="bg-white p-6 rounded-lg shadow">
