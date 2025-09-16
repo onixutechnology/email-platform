@@ -1,20 +1,110 @@
 import React, { useState, useEffect, useRef } from 'react';
 import api from '../services/api';
-import ReactQuill from 'react-quill';
+import ReactQuill, { Quill } from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import ImageGallery from "./ImageGallery";
+import Cropper from 'react-easy-crop';
 
-// Componente para subir imágenes
+// ------ Plugins -------
+import ImageResize from 'quill-image-resize-module-react';
+Quill.register('modules/imageResize', ImageResize);
+
+const quillModules = {
+  toolbar: [
+    [{ header: [1, 2, 3, false] }, { font: [] }],
+    ['bold', 'italic', 'underline', 'strike', 'blockquote'],
+    [{ align: [] }],
+    [{ color: [] }, { background: [] }],
+    [{ script: 'sub' }, { script: 'super' }],
+    [{ list: 'ordered' }, { list: 'bullet' }, { indent: '-1' }, { indent: '+1' }],
+    [{ direction: 'rtl' }],
+    ['link', 'image', 'video'],
+    ['clean']
+  ],
+  imageResize: { modules: ['Resize', 'DisplaySize', 'Toolbar'] }
+};
+
+const quillFormats = [
+  'header', 'font', 'size', 'bold', 'italic', 'underline', 'strike', 'blockquote',
+  'color', 'background', 'align', 'script', 'direction', 'list', 'indent',
+  'link', 'image', 'video'
+];
+
+// --- Crop Modal --------
+function CropModal({ imageSrc, onComplete, onCancel }) {
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+
+  const getCroppedImg = async () => {
+    // Usando canvas para crop real
+    const image = new window.Image();
+    image.src = imageSrc;
+    await new Promise(resolve => (image.onload = resolve));
+    const cropCanvas = document.createElement('canvas');
+    const ctx = cropCanvas.getContext('2d');
+    cropCanvas.width = image.width * zoom;
+    cropCanvas.height = image.height * zoom;
+    ctx.drawImage(image, -(crop.x * zoom), -(crop.y * zoom));
+    return cropCanvas.toDataURL();
+  };
+
+  const handleDone = async () => {
+    const croppedDataUrl = await getCroppedImg();
+    onComplete(croppedDataUrl);
+  };
+
+  return (
+    <div style={{
+      position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh",
+      background: "rgba(0,0,0,0.8)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000
+    }}>
+      <div style={{ background: "#fff", padding: 20, borderRadius: 6 }}>
+        <Cropper
+          image={imageSrc}
+          crop={crop}
+          zoom={zoom}
+          aspect={4 / 3}
+          onCropChange={setCrop}
+          onZoomChange={setZoom}
+          showGrid={true}
+        />
+        <div style={{ marginTop: 12 }}>
+          <button onClick={handleDone} className="bg-indigo-600 text-white px-4 py-2 rounded mr-2">Recortar y Subir</button>
+          <button onClick={onCancel} className="bg-gray-400 text-white px-4 py-2 rounded">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// -------- Componente uploader mejorado con crop modal ---
 function ImageUploader({ onUploaded }) {
   const [loading, setLoading] = useState(false);
+  const [showCrop, setShowCrop] = useState(false);
+  const [imageSrc, setImageSrc] = useState(null);
 
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    setLoading(true);
 
+    // Preview para crop antes de subir
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setImageSrc(ev.target.result);
+      setShowCrop(true);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleCropComplete = async (croppedDataUrl) => {
+    setLoading(true);
+    setShowCrop(false);
+
+    // Convert dataUrl (base64) to Blob for upload
+    const res = await fetch(croppedDataUrl);
+    const blob = await res.blob();
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("file", new File([blob], "cropped-image.png", { type: blob.type }));
 
     try {
       const response = await fetch("https://email-platform-api-j0fg.onrender.com/upload-image/", {
@@ -23,18 +113,26 @@ function ImageUploader({ onUploaded }) {
       });
       const data = await response.json();
       const url = `https://email-platform-api-j0fg.onrender.com${data.url}`;
-      onUploaded(url); // Inserta la imagen en el correo (via Quill)
+      onUploaded(url);
     } catch (err) {
       alert("Error al subir imagen");
     }
     setLoading(false);
+    setImageSrc(null);
   };
 
   return (
     <div style={{ marginBottom: "12px" }}>
-      <label className="block text-sm font-medium text-gray-700">Adjuntar imagen al mensaje</label>
+      <label className="block text-sm font-medium text-gray-700">Adjuntar imagen al mensaje (recorte/previsualización disponible)</label>
       <input type="file" accept="image/*" onChange={handleFileChange} disabled={loading} />
       {loading && <span className="text-xs text-gray-500 ml-2">Subiendo...</span>}
+      {showCrop && (
+        <CropModal 
+          imageSrc={imageSrc}
+          onComplete={handleCropComplete}
+          onCancel={() => setShowCrop(false)}
+        />
+      )}
     </div>
   );
 }
@@ -49,7 +147,7 @@ const EmailCompose = () => {
   const [mailboxes, setMailboxes] = useState([]);
   const [status, setStatus] = useState('');
   const [loading, setLoading] = useState(false);
-  const [galleryRefresh, setGalleryRefresh] = useState(0); // Estado para refrescar galería
+  const [galleryRefresh, setGalleryRefresh] = useState(0);
 
   const quillRef = useRef(null);
 
@@ -93,7 +191,7 @@ const EmailCompose = () => {
   // Maneja subida de imagen y refresca galería
   const handleImageUploaded = (imageUrl) => {
     insertImageInQuill(imageUrl);
-    setGalleryRefresh(val => val + 1); // fuerza actualización de galería
+    setGalleryRefresh(val => val + 1);
   };
 
   const handleSubmit = async (e) => {
@@ -113,7 +211,7 @@ const EmailCompose = () => {
       await api.post('/emails/send', emailData);
       setStatus('¡Correo enviado exitosamente!');
       setFormData({ to: '', subject: '', body: '', mailbox_id: '' });
-      quillRef.current.getEditor().setContents([]); // Limpia el editor Quill
+      quillRef.current.getEditor().setContents([]);
     } catch (error) {
       setStatus('Error al enviar correo: ' + (error.response?.data?.detail || error.message));
     }
@@ -176,7 +274,7 @@ const EmailCompose = () => {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Mensaje HTML con imágenes adjuntas
+              Mensaje HTML con imágenes, crop previo, resize y controles avanzados
             </label>
             <ImageUploader onUploaded={handleImageUploaded} />
             <ImageGallery onSelect={insertImageInQuill} refreshTrigger={galleryRefresh} />
@@ -185,8 +283,10 @@ const EmailCompose = () => {
               theme="snow"
               value={formData.body}
               onChange={handleQuillChange}
+              modules={quillModules}
+              formats={quillFormats}
               className="bg-white"
-              style={{ minHeight: "150px" }}
+              style={{ minHeight: "220px" }}
             />
           </div>
           <div className="mt-4 mb-2 p-3 border rounded bg-gray-50">
