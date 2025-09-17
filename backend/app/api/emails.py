@@ -28,6 +28,8 @@ from fastapi import Request, Response
 from sqlalchemy import update
 from datetime import datetime
 
+BASE_URL = os.getenv("EMAIL_PLATFORM_API_URL", "http://localhost:8000")
+
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -37,13 +39,25 @@ router = APIRouter(prefix="/emails", tags=["emails"])
 def add_tracking_pixel(html_body: str, email_log_id: int) -> str:
     """Agrega pixel de tracking al HTML"""
     if html_body:
-        pixel_url = f"https://email-platform-api-j0fg.onrender.com/track/open/{email_log_id}.png"
+        pixel_url = f"{BASE_URL}/track/open/{email_log_id}.png"
         tracking_pixel = f'<img src="{pixel_url}" width="1" height="1" style="display:none;" />'
+        
+        # ✅ AGREGAR ESTE LOG
+        logger.info(f"🔍 Agregando pixel de tracking: {pixel_url}")
+        
         if "</body>" in html_body:
             html_body = html_body.replace("</body>", f"{tracking_pixel}</body>")
         else:
             html_body += tracking_pixel
+            
+        # ✅ AGREGAR ESTE LOG
+        logger.info(f"✅ Pixel agregado correctamente")
+    else:
+        # ✅ AGREGAR ESTE LOG
+        logger.warning(f"⚠️ No hay HTML body para agregar pixel al email {email_log_id}")
+    
     return html_body
+
 
 # Modelos Pydantic
 class EmailSend(BaseModel):
@@ -320,12 +334,12 @@ async def send_email_background(
     html_body: Optional[str] = None,
     cc: Optional[List[str]] = None,
     bcc: Optional[List[str]] = None,
-    attachments: Optional[List[str]] = None,  # ← AGREGAR ESTE PARÁMETRO
+    attachments: Optional[List[str]] = None,
     retry_count: int = 0
 ):
     """Función para enviar email en background con reintentos"""
     
-    # Crear log inicial
+    # ✅ PRIMERO: Crear log inicial
     email_log = EmailLog(
         to_email=to_email,
         from_email=mailbox.email,
@@ -340,8 +354,12 @@ async def send_email_background(
     await db.commit()
     await db.refresh(email_log)   # ← ¡ESTO ES CRUCIAL para obtener el id real de la BD!
     
+    # ✅ SEGUNDO: Agregar pixel de tracking si hay HTML
     if html_body:
-      html_body = add_tracking_pixel(html_body, email_log.id)
+        html_body = add_tracking_pixel(html_body, email_log.id)
+        logger.info(f"📧 Enviando email con HTML y pixel de tracking")
+    else:
+        logger.warning(f"⚠️ Email {email_log.id} enviado solo como texto plano - NO TRACKING")
 
     try:
         logger.info(f"🚀 ENVIANDO EMAIL (Intento {retry_count + 1}/3):")
@@ -353,10 +371,9 @@ async def send_email_background(
         if not mailbox.is_verified:
             logger.warning(f"⚠️ Mailbox {mailbox.email} no está verificado")
         
-        # Enviar según proveedor - ✅ CORRECCIÓN AQUÍ
+        # Enviar según proveedor
         sender = EmailSender()
-        
-        provider_lower = mailbox.provider.lower()  # ← CONVERTIR A MINÚSCULAS
+        provider_lower = mailbox.provider.lower()
         
         if provider_lower in ['gmail', 'outlook', 'yahoo', 'smtp']:
             result = await sender.send_via_smtp(
@@ -378,9 +395,6 @@ async def send_email_background(
             logger.info("🎉 EMAIL ENVIADO EXITOSAMENTE")
         else:
             raise Exception(result['error'])
-            
-
-
 
     except Exception as e:
         error_msg = str(e)
@@ -404,6 +418,7 @@ async def send_email_background(
     logger.info(f"💾 Log guardado con status: {email_log.status}")
 
 
+
 # Endpoints
 @router.get("/track/open/{email_id}.png")
 async def track_email_open(
@@ -412,23 +427,36 @@ async def track_email_open(
     db: AsyncSession = Depends(get_db)
 ):
     """Registrar apertura de email y devolver pixel transparente"""
+    
+    # ✅ AGREGAR LOGGING
+    client_ip = request.client.host
+    user_agent = request.headers.get("user-agent", "Unknown")
+    logger.info(f"📬 TRACKING: Email {email_id} abierto desde IP {client_ip}")
+    logger.info(f"📱 User-Agent: {user_agent}")
+    
     # Buscar log
     result = await db.execute(
         select(EmailLog).where(EmailLog.id == email_id)
     )
     log = result.scalar_one_or_none()
     
-    if log and not log.opened_at:
-        log.opened_at = datetime.utcnow()  # ← Necesita columna en el modelo
+    if not log:
+        logger.warning(f"❌ Email log {email_id} no encontrado")
+    elif log.opened_at:
+        logger.info(f"ℹ️ Email {email_id} ya había sido abierto anteriormente")
+    else:
+        log.opened_at = datetime.utcnow()
         await db.commit()
+        logger.info(f"✅ Email {email_id} marcado como abierto por primera vez")
     
-    # Puede opcionalmente guardar IP o user-agent (privacidad/GDPR)
+    # Devolver pixel transparente
     transparent_gif = (
         b'GIF89a\x01\x00\x01\x00\x80\x00\x00\xff\xff\xff'
         b'\x00\x00\x00!\xf9\x04\x01\x00\x00\x00\x00,'
         b'\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02\x04\x01\x00;'
     )
     return Response(content=transparent_gif, media_type="image/gif")
+
 
 @router.post("/send")
 async def send_email(
@@ -507,6 +535,38 @@ async def send_email(
         "message": "Email agregado a cola de procesamiento",
         "mailbox_used": mailbox.email
     }
+
+@router.get("/debug/tracking/{email_id}")
+async def debug_tracking(
+    email_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Debug del tracking de un email específico"""
+    
+    result = await db.execute(
+        select(EmailLog).where(
+            EmailLog.id == email_id,
+            EmailLog.sent_by == current_user.id
+        )
+    )
+    log = result.scalar_one_or_none()
+    
+    if not log:
+        raise HTTPException(status_code=404, detail="Email no encontrado")
+    
+    pixel_url = f"{BASE_URL}/track/open/{email_id}.png"
+    
+    return {
+        "email_id": email_id,
+        "status": log.status,
+        "created_at": log.created_at,
+        "opened_at": log.opened_at,
+        "pixel_url": pixel_url,
+        "base_url": BASE_URL,
+        "has_tracking": log.opened_at is not None
+    }
+
 
 @router.get("/history", response_model=List[EmailResponse])
 async def get_email_history(
