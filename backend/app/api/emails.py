@@ -27,8 +27,9 @@ from app.models.user import User
 from fastapi import Request, Response
 from sqlalchemy import update
 from datetime import datetime
+from app.core.config import settings
 
-BASE_URL = os.getenv("EMAIL_PLATFORM_API_URL", "http://localhost:8000")
+BASE_URL = settings.EMAIL_PLATFORM_API_URL
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)

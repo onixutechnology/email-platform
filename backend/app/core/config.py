@@ -1,6 +1,5 @@
-from pydantic_settings import BaseSettings
-from pydantic import ConfigDict
-
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing import Optional
 
 class Settings(BaseSettings):
     # Información general
@@ -17,24 +16,24 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     ALGORITHM: str = "HS256"
 
-    # Proveedores de mail (puedes completar en .env)
+    # Proveedores de mail
     AWS_SES_ACCESS_KEY: str = ""
     AWS_SES_SECRET_KEY: str = ""
     AWS_SES_REGION: str = "us-east-1"
     GMAIL_CLIENT_ID: str = ""
     GMAIL_CLIENT_SECRET: str = ""
 
-    # Puerto para desplegar la app (por ejemplo, en Render)
+    # Puerto para desplegar la app
     PORT: int = 8000
-
-    # Configuración para cargar variables de entorno desde un archivo .env
-    model_config = ConfigDict(env_file=".env")
-  # ✅ AGREGAR ESTA LÍNEA:
-    email_platform_api_url: str = "http://localhost:8000"
     
-    class Config:
-        env_file = ".env"
-        case_sensitive = False  # Para convertir EMAIL_PLATFORM_API_URL → email_platform_api_url
+    # ✅ Variable para tracking de emails
+    EMAIL_PLATFORM_API_URL: str = "http://localhost:8000"
 
+    # ✅ Solo usar model_config (NO class Config)
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        case_sensitive=False,
+        extra="ignore"  # Ignora variables extra de Render
+    )
 
 settings = Settings()
