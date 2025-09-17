@@ -29,6 +29,12 @@ class Settings(BaseSettings):
 
     # Configuración para cargar variables de entorno desde un archivo .env
     model_config = ConfigDict(env_file=".env")
+  # ✅ AGREGAR ESTA LÍNEA:
+    email_platform_api_url: str = "http://localhost:8000"
+    
+    class Config:
+        env_file = ".env"
+        case_sensitive = False  # Para convertir EMAIL_PLATFORM_API_URL → email_platform_api_url
 
 
 settings = Settings()
