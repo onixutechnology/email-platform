@@ -28,7 +28,8 @@ from fastapi import Request, Response
 from sqlalchemy import update
 from datetime import datetime
 from app.core.config import settings
-
+import user_agents
+import geoip2.database
 BASE_URL = settings.EMAIL_PLATFORM_API_URL
 
 # Configurar logging
@@ -427,9 +428,9 @@ async def track_email_open(
     request: Request,
     db: AsyncSession = Depends(get_db)
 ):
-    """Registrar apertura de email y devolver pixel transparente"""
+    """Registrar apertura avanzada de email y devolver pixel transparente"""
     
-    # ✅ DEFINIR PIXEL PRIMERO - Garantiza respuesta siempre
+    # Pixel transparente
     transparent_gif = (
         b'GIF89a\x01\x00\x01\x00\x80\x00\x00\xff\xff\xff'
         b'\x00\x00\x00!\xf9\x04\x01\x00\x00\x00\x00,'
@@ -437,45 +438,92 @@ async def track_email_open(
     )
     
     try:
-        # Logging detallado
+        # Obtener información del cliente
         client_ip = getattr(request.client, 'host', 'unknown')
-        user_agent = request.headers.get("user-agent", "Unknown")
-        logger.info(f"📬 TRACKING REQUEST: Email {email_id} desde IP {client_ip}")
+        user_agent_string = request.headers.get("user-agent", "Unknown")
+        referrer = request.headers.get("referer", "")
+        accept_language = request.headers.get("accept-language", "")
         
-        # Buscar email en BD
+        # Parsear User Agent
+        user_agent = user_agents.parse(user_agent_string)
+        
+        # Datos de tracking avanzados
+        tracking_data = {
+            "ip": client_ip,
+            "user_agent": user_agent_string,
+            "browser": user_agent.browser.family,
+            "browser_version": user_agent.browser.version_string,
+            "os": user_agent.os.family,
+            "os_version": user_agent.os.version_string,
+            "device": user_agent.device.family,
+            "is_mobile": user_agent.is_mobile,
+            "is_tablet": user_agent.is_tablet,
+            "is_pc": user_agent.is_pc,
+            "referrer": referrer,
+            "language": accept_language,
+            "opened_at": datetime.utcnow().isoformat(),
+            "timestamp": datetime.utcnow().timestamp()
+        }
+        
+        # Opcional: Geolocalización (requiere base de datos GeoIP)
+        try:
+            # reader = geoip2.database.Reader('GeoLite2-City.mmdb')
+            # response = reader.city(client_ip)
+            # tracking_data["country"] = response.country.name
+            # tracking_data["city"] = response.city.name
+            pass
+        except:
+            pass
+        
+        logger.info(f"📬 TRACKING: Email {email_id} desde IP {client_ip}")
+        logger.info(f"📱 Dispositivo: {user_agent.device.family} - {user_agent.os.family}")
+        
+        # Buscar y actualizar email log
         result = await db.execute(
             select(EmailLog).where(EmailLog.id == email_id)
         )
         log = result.scalar_one_or_none()
         
-        if not log:
-            logger.warning(f"❌ Email log {email_id} no encontrado")
-        elif log.opened_at:
-            logger.info(f"ℹ️ Email {email_id} ya abierto: {log.opened_at}")
-        else:
-            # Marcar como abierto
-            log.opened_at = datetime.utcnow()
+        if log:
+            current_time = datetime.utcnow()
+            
+            if not log.opened_at:
+                # Primera apertura
+                log.opened_at = current_time
+                log.open_count = 1
+                log.tracking_data = tracking_data
+                logger.info(f"✅ Email {email_id} PRIMERA APERTURA")
+            else:
+                # Apertura adicional
+                log.open_count = (log.open_count or 0) + 1
+                log.last_opened_at = current_time
+                
+                # Actualizar datos de tracking (mantener historial)
+                if log.tracking_data:
+                    if "opens" not in log.tracking_data:
+                        log.tracking_data["opens"] = []
+                    log.tracking_data["opens"].append(tracking_data)
+                else:
+                    log.tracking_data = {"opens": [tracking_data]}
+                
+                logger.info(f"🔄 Email {email_id} apertura #{log.open_count}")
+            
             await db.commit()
-            logger.info(f"✅ Email {email_id} marcado como ABIERTO")
-        
+        else:
+            logger.warning(f"❌ Email log {email_id} no encontrado")
+            
     except Exception as e:
         logger.error(f"💥 Error tracking email {email_id}: {str(e)}")
-        # Hacer rollback si hay error
         try:
             await db.rollback()
         except:
             pass
     
-    # ✅ SIEMPRE devolver pixel (200, nunca 404)
     return Response(
-        content=transparent_gif, 
-        media_type="image/gif",
+        content=transparent_gif,
+        media_type="image/gif", 
         status_code=200,
-        headers={
-            "Cache-Control": "no-cache, no-store, must-revalidate",
-            "Pragma": "no-cache", 
-            "Expires": "0"
-        }
+        headers={"Cache-Control": "no-cache"}
     )
 
 
