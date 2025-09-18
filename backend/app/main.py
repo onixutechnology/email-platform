@@ -6,13 +6,13 @@ from app.api import domains, emails, auth, user, mailbox, files
 from app.db.base import engine, Base
 from app.core.database import connect_to_mongo, close_mongo_connection
 
-# ✅ IMPORTAR TODOS LOS MODELOS (incluyendo EmailLog)
+# Importar modelos
 from app.models.user import User
 from app.models.role import Role
 from app.models.user_roles import user_roles
 from app.models.mailbox import Mailbox
 from app.models.outgoing_domain import OutgoingDomain
-from app.models.email_log import EmailLog  # ← AGREGAR ESTA LÍNEA
+from app.models.email_log import EmailLog
 
 app = FastAPI(
     title="Email Platform API",
@@ -20,32 +20,39 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CORS
+# ✅ CONFIGURACIÓN CORS CORREGIDA
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:5173",
-        "https://email-platform-na5m.onrender.com"
+        "http://localhost:5173",                           # Desarrollo local
+        "https://email-platform-na5m.onrender.com",       # Frontend en producción
+        "https://email-platform-na5m.onrender.com/"       # Con slash final por si acaso
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"]  # ✅ Agregar esto para exponer headers
 )
 
 # Archivos estáticos
 app.mount("/static", StaticFiles(directory="uploads"), name="static")
 
-# ✅ Registrar routers (el orden importa)
+# Registrar routers
 app.include_router(files.router)
 app.include_router(auth.router)
 app.include_router(user.router)
 app.include_router(mailbox.router)
 app.include_router(domains.router)
-app.include_router(emails.router)  # ← Aquí está el tracking
+app.include_router(emails.router)
 
 @app.get("/")
 def root():
-    return {"service": "Email Platform API", "status": "online", "tracking": "enabled"}
+    return {
+        "service": "Email Platform API", 
+        "status": "online", 
+        "tracking": "enabled",
+        "cors": "configured"
+    }
 
 @app.on_event("startup")
 async def startup_event():
@@ -54,16 +61,10 @@ async def startup_event():
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
         print("✅ Tablas creadas/verificadas exitosamente y MongoDB conectado!")
-        
-        # ✅ MOSTRAR TODAS LAS RUTAS REGISTRADAS
-        print("📋 Rutas registradas:")
-        for route in app.routes:
-            if hasattr(route, 'path'):
-                print(f"   {route.methods} {route.path}")
-                
+        print("📬 Sistema de tracking de emails activado")
+        print("🌐 CORS configurado para frontend en Render")
     except Exception as e:
         print(f"❌ Error durante el startup: {e}")
-
 
 @app.on_event("shutdown")
 async def shutdown_event():
