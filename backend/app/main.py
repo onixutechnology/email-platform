@@ -21,18 +21,15 @@ app = FastAPI(
 )
 
 # ✅ CONFIGURACIÓN CORS CORREGIDA
+# ⚠️ CONFIGURACIÓN TEMPORAL PARA DEBUGGING
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",                           # Desarrollo local
-        "https://email-platform-na5m.onrender.com",       # Frontend en producción
-        "https://email-platform-na5m.onrender.com/"       # Con slash final por si acaso
-    ],
-    allow_credentials=True,
+    allow_origins=["*"],  # Permitir todos los orígenes
+    allow_credentials=False,  # DEBE ser False si usas "*"
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["*"]  # ✅ Agregar esto para exponer headers
 )
+
 
 # Archivos estáticos
 app.mount("/static", StaticFiles(directory="uploads"), name="static")
