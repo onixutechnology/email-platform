@@ -429,35 +429,50 @@ async def track_email_open(
 ):
     """Registrar apertura de email y devolver pixel transparente"""
     
-    # ✅ AGREGAR LOGGING
-    client_ip = request.client.host
-    user_agent = request.headers.get("user-agent", "Unknown")
-    logger.info(f"📬 TRACKING: Email {email_id} abierto desde IP {client_ip}")
-    logger.info(f"📱 User-Agent: {user_agent}")
+    try:
+        # ✅ LOGGING DETALLADO para debugging
+        client_ip = getattr(request.client, 'host', 'unknown')
+        user_agent = request.headers.get("user-agent", "Unknown")
+        logger.info(f"📬 TRACKING REQUEST: Email {email_id} desde IP {client_ip}")
+        logger.info(f"📱 User-Agent: {user_agent}")
+        
+        # ✅ BUSCAR EMAIL EN BASE DE DATOS
+        result = await db.execute(
+            select(EmailLog).where(EmailLog.id == email_id)
+        )
+        log = result.scalar_one_or_none()
+        
+        if not log:
+            logger.warning(f"❌ Email log {email_id} no encontrado en BD")
+        elif log.opened_at:
+            logger.info(f"ℹ️ Email {email_id} ya abierto anteriormente: {log.opened_at}")
+        else:
+            # ✅ MARCAR COMO ABIERTO POR PRIMERA VEZ
+            log.opened_at = datetime.utcnow()
+            await db.commit()
+            logger.info(f"✅ Email {email_id} marcado como ABIERTO por primera vez")
+        
+    except Exception as e:
+        logger.error(f"💥 Error en tracking email {email_id}: {str(e)}")
+        # Continuar y devolver pixel de todas formas
     
-    # Buscar log
-    result = await db.execute(
-        select(EmailLog).where(EmailLog.id == email_id)
-    )
-    log = result.scalar_one_or_none()
-    
-    if not log:
-        logger.warning(f"❌ Email log {email_id} no encontrado")
-    elif log.opened_at:
-        logger.info(f"ℹ️ Email {email_id} ya había sido abierto anteriormente")
-    else:
-        log.opened_at = datetime.utcnow()
-        await db.commit()
-        logger.info(f"✅ Email {email_id} marcado como abierto por primera vez")
-    
-    # Devolver pixel transparente
+    # ✅ PIXEL TRANSPARENTE - SIEMPRE RETORNA 200
     transparent_gif = (
         b'GIF89a\x01\x00\x01\x00\x80\x00\x00\xff\xff\xff'
         b'\x00\x00\x00!\xf9\x04\x01\x00\x00\x00\x00,'
         b'\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02\x04\x01\x00;'
     )
-    return Response(content=transparent_gif, media_type="image/gif")
-
+    
+    return Response(
+        content=transparent_gif, 
+        media_type="image/gif",
+        status_code=200,  # ✅ NUNCA 404
+        headers={
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache", 
+            "Expires": "0"
+        }
+    )
 
 @router.post("/send")
 async def send_email(
