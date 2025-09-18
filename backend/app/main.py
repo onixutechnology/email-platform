@@ -54,9 +54,16 @@ async def startup_event():
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
         print("✅ Tablas creadas/verificadas exitosamente y MongoDB conectado!")
-        print("📬 Sistema de tracking de emails activado")
+        
+        # ✅ MOSTRAR TODAS LAS RUTAS REGISTRADAS
+        print("📋 Rutas registradas:")
+        for route in app.routes:
+            if hasattr(route, 'path'):
+                print(f"   {route.methods} {route.path}")
+                
     except Exception as e:
         print(f"❌ Error durante el startup: {e}")
+
 
 @app.on_event("shutdown")
 async def shutdown_event():

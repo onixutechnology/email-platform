@@ -40,7 +40,7 @@ router = APIRouter(prefix="/emails", tags=["emails"])
 def add_tracking_pixel(html_body: str, email_log_id: int) -> str:
     """Agrega pixel de tracking al HTML"""
     if html_body:
-        pixel_url = f"{BASE_URL}/track/open/{email_log_id}.png"
+        pixel_url = f"{BASE_URL}/emails/track/open/{email_log_id}.png"
         tracking_pixel = f'<img src="{pixel_url}" width="1" height="1" style="display:none;" />'
         
         # ✅ AGREGAR ESTE LOG
