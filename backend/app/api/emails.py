@@ -576,7 +576,7 @@ async def debug_tracking(
     if not log:
         raise HTTPException(status_code=404, detail="Email no encontrado")
     
-    pixel_url = f"{BASE_URL}/track/open/{email_id}.png"
+    pixel_url = f"{BASE_URL}/emails/track/open/{email_id}.png"
     
     return {
         "email_id": email_id,
