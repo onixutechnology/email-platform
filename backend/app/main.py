@@ -20,18 +20,17 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# ✅ CONFIGURACIÓN CORS CORREGIDA
-# ⚠️ CONFIGURACIÓN TEMPORAL PARA DEBUGGING
+# ✅ CONFIGURACIÓN CORS MUY PERMISIVA TEMPORAL
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Permitir todos los orígenes
-    allow_credentials=False,  # DEBE ser False si usas "*"
-    allow_methods=["*"],
+    allow_origins=["*"],  # Permitir TODOS los orígenes
+    allow_credentials=False,  # OBLIGATORIO: False si usas "*"
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["*"]
 )
 
-
-# Archivos estáticos
+# Archivos estáticos DESPUÉS de CORS
 app.mount("/static", StaticFiles(directory="uploads"), name="static")
 
 # Registrar routers
@@ -47,8 +46,7 @@ def root():
     return {
         "service": "Email Platform API", 
         "status": "online", 
-        "tracking": "enabled",
-        "cors": "configured"
+        "cors": "enabled_wildcard"
     }
 
 @app.on_event("startup")
@@ -59,7 +57,7 @@ async def startup_event():
             await conn.run_sync(Base.metadata.create_all)
         print("✅ Tablas creadas/verificadas exitosamente y MongoDB conectado!")
         print("📬 Sistema de tracking de emails activado")
-        print("🌐 CORS configurado para frontend en Render")
+        print("🌐 CORS configurado con wildcard para debugging")
     except Exception as e:
         print(f"❌ Error durante el startup: {e}")
 
