@@ -112,6 +112,7 @@ const EmailOpensDashboard = () => {
               ? (() => { try { return JSON.parse(email.tracking_data); } catch { return {}; } })()
               : (email.tracking_data || {}),
           }))
+          .filter(email => email && email.id) // AGREGAR ESTA LÍNEA
         );
       } else {
         setEmails([]);
@@ -660,8 +661,10 @@ const browserStats = emails.reduce((acc, email) => {
                 </tr>
               </thead>
               <tbody>
-                {paginatedEmails.map((email, index) => {
-                  const openStatus = getOpenStatus(email);
+{paginatedEmails
+  .filter(email => email && email.id && email.to_email) // Solo emails válidos
+  .map((email, index) => {
+    const openStatus = getOpenStatus(email);
                   
                   return (
                     <tr 
