@@ -441,42 +441,64 @@ const browserStats = emails.reduce((acc, email) => {
         ))}
       </div>
 
-{/* Gráficos - VERSIÓN CORREGIDA */}
+{/* Gráficos - VERSIÓN ULTRA CONTROLADA CORREGIDA */}
 <div style={{ 
   display: "grid", 
   gridTemplateColumns: "1fr 1fr", 
   gap: 20, 
-  marginBottom: 24 
+  marginBottom: 24,
+  maxHeight: "450px" // LÍMITE TOTAL DE LA SECCIÓN
 }}>
   <div style={{ 
     padding: "20px", 
     backgroundColor: "white", 
     borderRadius: "12px", 
     boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-    height: "400px", // LÍMITE DE ALTURA FIJO
+    height: "400px", // ALTURA FIJA
+    maxHeight: "400px", // MÁXIMO ABSOLUTO
+    overflow: "hidden", // CORTA TODO LO QUE SE SALGA
     display: "flex",
     flexDirection: "column"
   }}>
-    <h3 style={{ marginTop: 0, marginBottom: "16px", flexShrink: 0 }}>📊 Tasa de Apertura</h3>
+    <h3 style={{ 
+      marginTop: 0, 
+      marginBottom: "16px", 
+      flexShrink: 0,
+      height: "40px" // ALTURA FIJA DEL TÍTULO
+    }}>📊 Tasa de Apertura</h3>
     <div style={{ 
       flex: 1, 
-      position: "relative", 
-      minHeight: "300px", 
-      maxHeight: "300px" // ALTURA MÁXIMA
+      position: "relative",
+      width: "100%",
+      height: "320px", // ALTURA FIJA EXACTA
+      maxHeight: "320px", // MÁXIMO ABSOLUTO
+      overflow: "hidden" // CORTA TODO LO EXTRA
     }}>
-      <Pie 
-        data={chartData.openRate} 
-        options={{ 
-          responsive: true, 
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'bottom',
-              labels: { boxWidth: 12 }
+      <div style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        width: "100%",
+        height: "100%"
+      }}>
+        <Pie 
+          data={chartData.openRate} 
+          options={{ 
+            responsive: true, 
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: { 
+                  boxWidth: 10,
+                  font: { size: 12 },
+                  padding: 10
+                }
+              }
             }
-          }
-        }} 
-      />
+          }} 
+        />
+      </div>
     </div>
   </div>
   
@@ -485,34 +507,54 @@ const browserStats = emails.reduce((acc, email) => {
     backgroundColor: "white", 
     borderRadius: "12px", 
     boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-    height: "400px", // LÍMITE DE ALTURA FIJO
+    height: "400px", // ALTURA FIJA
+    maxHeight: "400px", // MÁXIMO ABSOLUTO
+    overflow: "hidden", // CORTA TODO LO QUE SE SALGA
     display: "flex",
     flexDirection: "column"
   }}>
-    <h3 style={{ marginTop: 0, marginBottom: "16px", flexShrink: 0 }}>📱 Por Dispositivo</h3>
+    <h3 style={{ 
+      marginTop: 0, 
+      marginBottom: "16px", 
+      flexShrink: 0,
+      height: "40px" // ALTURA FIJA DEL TÍTULO
+    }}>📱 Por Dispositivo</h3>
     <div style={{ 
       flex: 1, 
-      position: "relative", 
-      minHeight: "300px", 
-      maxHeight: "300px" // ALTURA MÁXIMA
+      position: "relative",
+      width: "100%",
+      height: "320px", // ALTURA FIJA EXACTA
+      maxHeight: "320px", // MÁXIMO ABSOLUTO
+      overflow: "hidden" // CORTA TODO LO EXTRA
     }}>
-      <Pie 
-        data={chartData.deviceStats} 
-        options={{ 
-          responsive: true, 
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'bottom',
-              labels: { boxWidth: 12 }
+      <div style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        width: "100%",
+        height: "100%"
+      }}>
+        <Pie 
+          data={chartData.deviceStats} 
+          options={{ 
+            responsive: true, 
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: { 
+                  boxWidth: 10,
+                  font: { size: 12 },
+                  padding: 10
+                }
+              }
             }
-          }
-        }} 
-      />
+          }} 
+        />
+      </div>
     </div>
   </div>
 </div>
-
 
       {/* Filtros Avanzados */}
       <div style={{
