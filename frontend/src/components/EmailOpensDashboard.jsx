@@ -235,10 +235,13 @@ const EmailOpensDashboard = () => {
   }, [filteredEmails, sortBy, sortOrder]);
 
   // Paginación
-  const paginatedEmails = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    return sortedEmails.slice(start, start + itemsPerPage);
-  }, [sortedEmails, currentPage, itemsPerPage]);
+const paginatedEmails = useMemo(() => {
+  const start = (currentPage - 1) * itemsPerPage;
+  return sortedEmails
+    .filter(email => email && email.id && email.to_email && email.from_email) // FILTRO EXTRA AQUÍ
+    .slice(start, start + itemsPerPage);
+}, [sortedEmails, currentPage, itemsPerPage]);
+
 
   // Estadísticas avanzadas
   const stats = useMemo(() => {
@@ -660,107 +663,109 @@ const browserStats = emails.reduce((acc, email) => {
                   <th style={{ padding: "16px 12px", textAlign: "left", fontWeight: 600 }}>⚙️ Acciones</th>
                 </tr>
               </thead>
-              <tbody>
-{paginatedEmails
-  .filter(email => email && email.id && email.to_email) // Solo emails válidos
-  .map((email, index) => {
-    const openStatus = getOpenStatus(email);
-                  
-                  return (
-                    <tr 
-                      key={email.id}
-                      style={{ 
-                        borderBottom: "1px solid #e5e7eb",
-                        backgroundColor: index % 2 === 0 ? "#ffffff" : "#f9fafb"
-                      }}
-                    >
-                      <td style={{ padding: "12px" }}>
-                        <div>
-                          <div style={{ fontWeight: 500, fontSize: "14px" }}>
-                            {email.to_email}
-                          </div>
-                          <div style={{ 
-                            fontSize: "12px", 
-                            color: "#6b7280",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                            maxWidth: "200px"
-                          }}>
-                            {email.subject}
-                          </div>
-                        </div>
-                      </td>
-                      
-                      <td style={{ padding: "12px", fontSize: "13px", color: "#6b7280" }}>
-                        {formatDate(email.created_at)}
-                      </td>
-                      
-                      <td style={{ padding: "12px" }}>
-                        <span style={{
-                          color: email.status === "sent" ? "#059669" : "#dc2626",
-                          fontWeight: 600,
-                          fontSize: "13px"
-                        }}>
-                          {email.status === "sent" ? "✅ Enviado" : "❌ Fallido"}
-                        </span>
-                      </td>
-                      
-                      <td style={{ padding: "12px" }}>
-                        <div>
-                          <span style={{ color: openStatus.color, fontWeight: 600, fontSize: "13px" }}>
-                            {openStatus.text}
-                          </span>
-                          {email.opened_at && (
-                            <div style={{ fontSize: "11px", color: "#9ca3af" }}>
-                              {formatDate(email.opened_at)}
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                      
-                      <td style={{ padding: "12px", fontSize: "13px" }}>
-  <div>
-    <div>
-      {(typeof email.tracking_data === 'object' && email.tracking_data !== null && email.tracking_data.device)
-        ? email.tracking_data.device
-        : "Desconocido"}
-    </div>
-    <div style={{ fontSize: "11px", color: "#9ca3af" }}>
-      {(typeof email.tracking_data === 'object' && email.tracking_data !== null && email.tracking_data.os)
-        ? email.tracking_data.os
-        : ""}
-    </div>
-  </div>
-</td>
-                      
-                      <td style={{ padding: "12px", fontSize: "13px" }}>
-  {(typeof email.tracking_data === 'object' && email.tracking_data !== null && email.tracking_data.browser)
-    ? email.tracking_data.browser
-    : "-"}
-</td>
+<tbody>
+{paginatedEmails.map((email, index) => {
+  // GUARD TOTAL - evita cualquier fila vacía
+  if (!email || !email.id || !email.to_email) {
+    return null; // NO renderizar nada para datos inválidos
+  }
+  
+  const openStatus = getOpenStatus(email);
+  
+  return (
+    <tr 
+      key={email.id}
+      style={{ 
+        borderBottom: "1px solid #e5e7eb",
+        backgroundColor: index % 2 === 0 ? "#ffffff" : "#f9fafb"
+      }}
+    >
+      <td style={{ padding: "12px" }}>
+        <div>
+          <div style={{ fontWeight: 500, fontSize: "14px" }}>
+            {email.to_email || "N/A"}
+          </div>
+          <div style={{ 
+            fontSize: "12px", 
+            color: "#6b7280",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            maxWidth: "200px"
+          }}>
+            {email.subject || "Sin asunto"}
+          </div>
+        </div>
+      </td>
+      
+      <td style={{ padding: "12px", fontSize: "13px", color: "#6b7280" }}>
+        {formatDate(email.created_at)}
+      </td>
+      
+      <td style={{ padding: "12px" }}>
+        <span style={{
+          color: email.status === "sent" ? "#059669" : "#dc2626",
+          fontWeight: 600,
+          fontSize: "13px"
+        }}>
+          {email.status === "sent" ? "✅ Enviado" : "❌ Fallido"}
+        </span>
+      </td>
+      
+      <td style={{ padding: "12px" }}>
+        <div>
+          <span style={{ color: openStatus.color, fontWeight: 600, fontSize: "13px" }}>
+            {openStatus.text}
+          </span>
+          {email.opened_at && (
+            <div style={{ fontSize: "11px", color: "#9ca3af" }}>
+              {formatDate(email.opened_at)}
+            </div>
+          )}
+        </div>
+      </td>
+      
+      <td style={{ padding: "12px", fontSize: "13px" }}>
+        <div>
+          <div>
+            {(typeof email.tracking_data === 'object' && email.tracking_data !== null && email.tracking_data.device)
+              ? email.tracking_data.device
+              : "Desconocido"}
+          </div>
+          <div style={{ fontSize: "11px", color: "#9ca3af" }}>
+            {(typeof email.tracking_data === 'object' && email.tracking_data !== null && email.tracking_data.os)
+              ? email.tracking_data.os
+              : ""}
+          </div>
+        </div>
+      </td>
+      
+      <td style={{ padding: "12px", fontSize: "13px" }}>
+        {(typeof email.tracking_data === 'object' && email.tracking_data !== null && email.tracking_data.browser)
+          ? email.tracking_data.browser
+          : "-"}
+      </td>
+      
+      <td style={{ padding: "12px" }}>
+        <button
+          onClick={() => setSelectedEmail(email)}
+          style={{
+            padding: "4px 8px",
+            backgroundColor: "#f3f4f6",
+            border: "1px solid #d1d5db",
+            borderRadius: "6px",
+            cursor: "pointer",
+            fontSize: "12px"
+          }}
+        >
+          👁️ Ver
+        </button>
+      </td>
+    </tr>
+  );
+})}
+</tbody>
 
-                      
-                      
-                      <td style={{ padding: "12px" }}>
-                        <button
-                          onClick={() => setSelectedEmail(email)}
-                          style={{
-                            padding: "4px 8px",
-                            backgroundColor: "#f3f4f6",
-                            border: "1px solid #d1d5db",
-                            borderRadius: "6px",
-                            cursor: "pointer",
-                            fontSize: "12px"
-                          }}
-                        >
-                          👁️ Ver
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
             </table>
           </div>
           
