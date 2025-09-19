@@ -441,33 +441,78 @@ const browserStats = emails.reduce((acc, email) => {
         ))}
       </div>
 
-      {/* Gráficos */}
-      <div style={{ 
-        display: "grid", 
-        gridTemplateColumns: "1fr 1fr", 
-        gap: 20, 
-        marginBottom: 24 
-      }}>
-        <div style={{ 
-          padding: "20px", 
-          backgroundColor: "white", 
-          borderRadius: "12px", 
-          boxShadow: "0 1px 3px rgba(0,0,0,0.1)" 
-        }}>
-          <h3 style={{ marginTop: 0, marginBottom: "16px" }}>📊 Tasa de Apertura</h3>
-          <Pie data={chartData.openRate} options={{ responsive: true, maintainAspectRatio: false }} height={200} />
-        </div>
-        
-        <div style={{ 
-          padding: "20px", 
-          backgroundColor: "white", 
-          borderRadius: "12px", 
-          boxShadow: "0 1px 3px rgba(0,0,0,0.1)" 
-        }}>
-          <h3 style={{ marginTop: 0, marginBottom: "16px" }}>📱 Por Dispositivo</h3>
-          <Pie data={chartData.deviceStats} options={{ responsive: true, maintainAspectRatio: false }} height={200} />
-        </div>
-      </div>
+{/* Gráficos - VERSIÓN CORREGIDA */}
+<div style={{ 
+  display: "grid", 
+  gridTemplateColumns: "1fr 1fr", 
+  gap: 20, 
+  marginBottom: 24 
+}}>
+  <div style={{ 
+    padding: "20px", 
+    backgroundColor: "white", 
+    borderRadius: "12px", 
+    boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+    height: "400px", // LÍMITE DE ALTURA FIJO
+    display: "flex",
+    flexDirection: "column"
+  }}>
+    <h3 style={{ marginTop: 0, marginBottom: "16px", flexShrink: 0 }}>📊 Tasa de Apertura</h3>
+    <div style={{ 
+      flex: 1, 
+      position: "relative", 
+      minHeight: "300px", 
+      maxHeight: "300px" // ALTURA MÁXIMA
+    }}>
+      <Pie 
+        data={chartData.openRate} 
+        options={{ 
+          responsive: true, 
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: { boxWidth: 12 }
+            }
+          }
+        }} 
+      />
+    </div>
+  </div>
+  
+  <div style={{ 
+    padding: "20px", 
+    backgroundColor: "white", 
+    borderRadius: "12px", 
+    boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+    height: "400px", // LÍMITE DE ALTURA FIJO
+    display: "flex",
+    flexDirection: "column"
+  }}>
+    <h3 style={{ marginTop: 0, marginBottom: "16px", flexShrink: 0 }}>📱 Por Dispositivo</h3>
+    <div style={{ 
+      flex: 1, 
+      position: "relative", 
+      minHeight: "300px", 
+      maxHeight: "300px" // ALTURA MÁXIMA
+    }}>
+      <Pie 
+        data={chartData.deviceStats} 
+        options={{ 
+          responsive: true, 
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: { boxWidth: 12 }
+            }
+          }
+        }} 
+      />
+    </div>
+  </div>
+</div>
+
 
       {/* Filtros Avanzados */}
       <div style={{
