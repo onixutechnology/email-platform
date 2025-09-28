@@ -7,7 +7,7 @@ import Cropper from "react-easy-crop";
 import Slider from "@mui/material/Slider";
 import EmojiPicker from "emoji-picker-react";
 
-// Plugins visuales y resize
+// Plugins visuales y resize con capacidades de arrastrar
 import ImageResize from "quill-image-resize-module-react";
 import QuillImageDropAndPaste from "quill-image-drop-and-paste";
 
@@ -18,11 +18,11 @@ try {
   console.warn("ImageDropAndPaste already registered");
 }
 
-// NUEVA FUNCIÓN: Configuración avanzada de Quill con más opciones
+// NUEVA FUNCIÓN: Configuración ultra avanzada de Quill con movimiento de imágenes
 const quillModules = {
   toolbar: {
     container: [
-      [{ header: [1, 2, 3, false] }, { font: [] }, { size: ['small', false, 'large', 'huge'] }],
+      [{ header: [1, 2, 3, 4, 5, 6, false] }, { font: [] }, { size: ['small', false, 'large', 'huge'] }],
       ["bold", "italic", "underline", "strike", "blockquote", "code-block"],
       [{ color: [] }, { background: [] }],
       [{ align: [] }],
@@ -45,9 +45,15 @@ const quillModules = {
   imageResize: { 
     modules: ["Resize", "DisplaySize", "Toolbar"],
     displayStyles: { 
-      backgroundColor: "#f3f6fb", 
-      border: "2px solid #4254ef",
-      borderRadius: "8px"
+      backgroundColor: "#f0f9ff", 
+      border: "3px solid #4f46e5",
+      borderRadius: "12px",
+      cursor: "move"
+    },
+    handleStyles: {
+      backgroundColor: "#4f46e5",
+      border: "none",
+      color: "white"
     }
   },
   imageDropAndPaste: {
@@ -61,6 +67,9 @@ const quillModules = {
     delay: 1000,
     maxStack: 100,
     userOnly: true
+  },
+  clipboard: {
+    matchVisual: false
   }
 };
 
@@ -70,27 +79,37 @@ const quillFormats = [
   "link","image","video","formula"
 ];
 
-// NUEVA FUNCIÓN: Análisis de contenido profesional
+// NUEVA FUNCIÓN: Análisis avanzado de contenido
 const analyzeEmailContent = (subject, body) => {
-  const textContent = body.replace(/<[^>]*>/g, ' ');
+  const textContent = body.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ');
   const words = textContent.trim().split(/\s+/).filter(word => word.length > 0);
   
-  // Análisis de asunto
+  // Análisis de asunto optimizado
   const subjectLength = subject.length;
   const subjectScore = subjectLength >= 30 && subjectLength <= 50 ? 100 : 
-                      subjectLength >= 20 && subjectLength <= 60 ? 75 : 50;
+                      subjectLength >= 20 && subjectLength <= 60 ? 85 : 
+                      subjectLength >= 15 && subjectLength <= 70 ? 70 : 50;
   
-  // Análisis de legibilidad
+  // Análisis de legibilidad mejorado
   const readabilityScore = words.length >= 50 && words.length <= 200 ? 100 :
-                          words.length >= 30 && words.length <= 300 ? 75 : 50;
+                          words.length >= 30 && words.length <= 300 ? 85 : 
+                          words.length >= 20 && words.length <= 400 ? 70 : 50;
   
-  // Detección de spam
-  const spamWords = ['gratis', 'free', 'urgente', 'limited time', '!!!', 'click here'];
+  // Detección avanzada de spam
+  const spamWords = ['gratis', 'free', 'urgente', 'limited time', '!!!', 'click here', 'act now', 'buy now', 'promoción', 'oferta', 'ganar dinero'];
   const spamCount = spamWords.filter(word => 
     textContent.toLowerCase().includes(word.toLowerCase()) ||
     subject.toLowerCase().includes(word.toLowerCase())
   ).length;
-  const spamScore = Math.max(0, 100 - (spamCount * 20));
+  const spamScore = Math.max(0, 100 - (spamCount * 15));
+  
+  // Análisis de engagement
+  const engagementWords = ['innovación', 'tecnología', 'solución', 'profesional', 'exclusivo', 'personalizado'];
+  const engagementCount = engagementWords.filter(word => 
+    textContent.toLowerCase().includes(word.toLowerCase()) ||
+    subject.toLowerCase().includes(word.toLowerCase())
+  ).length;
+  const engagementScore = Math.min(100, 60 + (engagementCount * 10));
   
   return {
     wordCount: words.length,
@@ -98,48 +117,80 @@ const analyzeEmailContent = (subject, body) => {
     subjectScore,
     readabilityScore,
     spamScore,
-    readingTime: Math.max(1, Math.ceil(words.length / 200))
+    engagementScore,
+    readingTime: Math.max(1, Math.ceil(words.length / 200)),
+    imageCount: (body.match(/<img/gi) || []).length,
+    linkCount: (body.match(/<a/gi) || []).length
   };
 };
 
-// NUEVA FUNCIÓN: Snippets de contenido reutilizable
+// NUEVA FUNCIÓN: Snippets profesionales expandidos
 const contentSnippets = [
   {
     id: 1,
-    name: "Saludo Profesional",
+    name: "Saludo Empresarial",
     category: "greetings",
-    html: `<p>Estimado/a {nombre},</p><p>Espero que se encuentre muy bien. Me pongo en contacto con usted para...</p>`
+    html: `<p style="font-size: 16px; line-height: 1.6;">Estimado/a <strong>{nombre}</strong>,</p>
+    <p style="font-size: 16px; line-height: 1.6;">Espero que se encuentre muy bien. Me dirijo a usted desde <strong>{empresa}</strong> para presentarle una oportunidad excepcional que puede transformar la eficiencia de su negocio.</p>`
   },
   {
     id: 2,
-    name: "Firma Corporativa",
+    name: "Firma Corporativa Completa",
     category: "signatures",
-    html: `<div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #e5e7eb;">
-      <p style="margin: 0;"><strong>{nombre}</strong></p>
-      <p style="margin: 0; color: #6b7280;">{cargo} - {empresa}</p>
-      <p style="margin: 0; color: #6b7280;">📧 {email} | 📱 {telefono}</p>
+    html: `<div style="margin-top: 40px; padding-top: 25px; border-top: 3px solid #4f46e5; background: #f8fafc; padding: 25px; border-radius: 12px;">
+      <div style="display: flex; align-items: center; gap: 15px;">
+        <div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 24px;">
+          {inicial}
+        </div>
+        <div>
+          <p style="margin: 0; font-size: 18px; font-weight: 800; color: #1f2937;">{nombre}</p>
+          <p style="margin: 0; font-size: 14px; color: #6b7280; font-weight: 600;">{cargo} - {empresa}</p>
+          <p style="margin: 5px 0 0 0; font-size: 14px; color: #4f46e5; font-weight: 600;">📧 {email} | 📱 {telefono} | 🌐 {website}</p>
+        </div>
+      </div>
     </div>`
   },
   {
     id: 3,
-    name: "Call to Action",
+    name: "Call to Action Premium",
     category: "cta",
-    html: `<div style="text-align: center; margin: 30px 0;">
-      <a href="{url}" style="background: #4f46e5; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold;">
-        🚀 Ver más detalles
+    html: `<div style="text-align: center; margin: 35px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 16px;">
+      <h3 style="color: white; margin: 0 0 20px 0; font-size: 22px; font-weight: 800;">¿Listo para revolucionar tu negocio?</h3>
+      <a href="{url}" style="background: white; color: #4f46e5; padding: 18px 40px; text-decoration: none; border-radius: 12px; font-weight: 800; font-size: 16px; display: inline-block; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+        🚀 Solicitar Demo Gratuita
       </a>
+      <p style="color: rgba(255,255,255,0.9); margin: 15px 0 0 0; font-size: 14px;">Sin compromiso • Respuesta en 24h • Soporte premium incluido</p>
+    </div>`
+  },
+  {
+    id: 4,
+    name: "Propuesta de Valor",
+    category: "content",
+    html: `<div style="background: #f0fdf4; border-left: 5px solid #10b981; padding: 25px; margin: 25px 0; border-radius: 0 12px 12px 0;">
+      <h4 style="color: #065f46; margin: 0 0 15px 0; font-size: 20px; font-weight: 800;">💡 Lo que obtienes con nosotros:</h4>
+      <ul style="color: #374151; font-size: 16px; line-height: 1.8; margin: 0; padding-left: 20px;">
+        <li><strong>Desarrollo personalizado</strong> según tus necesidades específicas</li>
+        <li><strong>Integración completa</strong> con tus sistemas existentes</li>
+        <li><strong>Soporte 24/7</strong> con técnicos especializados</li>
+        <li><strong>Actualizaciones automáticas</strong> y mejoras continuas</li>
+        <li><strong>ROI garantizado</strong> en los primeros 6 meses</li>
+      </ul>
     </div>`
   }
 ];
 
-// NUEVA FUNCIÓN: Variables dinámicas para personalización
+// NUEVA FUNCIÓN: Variables dinámicas expandidas
 const dynamicVariables = [
-  { key: "{nombre}", description: "Nombre del destinatario" },
-  { key: "{empresa}", description: "Nombre de la empresa" },
-  { key: "{fecha}", description: "Fecha actual" },
-  { key: "{cargo}", description: "Cargo en la empresa" },
-  { key: "{email}", description: "Email del destinatario" },
-  { key: "{telefono}", description: "Teléfono de contacto" }
+  { key: "{nombre}", description: "Nombre completo del destinatario", example: "Juan Pérez" },
+  { key: "{empresa}", description: "Nombre de la empresa", example: "TechCorp SA" },
+  { key: "{fecha}", description: "Fecha actual", example: "28 de Septiembre, 2025" },
+  { key: "{cargo}", description: "Cargo en la empresa", example: "Director de TI" },
+  { key: "{email}", description: "Email del destinatario", example: "juan@techcorp.com" },
+  { key: "{telefono}", description: "Teléfono de contacto", example: "+52 444 123 4567" },
+  { key: "{website}", description: "Sitio web de la empresa", example: "www.onixu.com" },
+  { key: "{inicial}", description: "Inicial del nombre", example: "J" },
+  { key: "{ciudad}", description: "Ciudad del destinatario", example: "San Luis Potosí" },
+  { key: "{industria}", description: "Sector industrial", example: "Tecnología" }
 ];
 
 // ✅ Función mejorada para obtener imagen recortada
@@ -162,12 +213,12 @@ function getCroppedImg(imageSrc, croppedAreaPixels) {
       
       canvas.toBlob(blob => {
         resolve(blob);
-      }, "image/png", 0.9);
+      }, "image/png", 0.95);
     };
   });
 }
 
-// ✅ Modal de recorte MEJORADO con más opciones
+// ✅ Modal de recorte ULTRA AVANZADO
 function CropModal({ imageSrc, onComplete, onCancel }) {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
@@ -175,12 +226,15 @@ function CropModal({ imageSrc, onComplete, onCancel }) {
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [aspectRatio, setAspectRatio] = useState(16/9);
+  const [brightness, setBrightness] = useState(100);
+  const [contrast, setContrast] = useState(100);
 
   const aspectRatios = [
     { label: "16:9", value: 16/9 },
     { label: "4:3", value: 4/3 },
     { label: "1:1", value: 1 },
     { label: "3:4", value: 3/4 },
+    { label: "21:9", value: 21/9 },
     { label: "Libre", value: null }
   ];
 
@@ -206,7 +260,7 @@ function CropModal({ imageSrc, onComplete, onCancel }) {
       left: 0,
       width: "100vw",
       height: "100vh",
-      backgroundColor: "rgba(0,0,0,0.9)",
+      backgroundColor: "rgba(0,0,0,0.95)",
       display: "flex",
       justifyContent: "center",
       alignItems: "center",
@@ -216,47 +270,54 @@ function CropModal({ imageSrc, onComplete, onCancel }) {
     }}>
       <div style={{
         backgroundColor: "#ffffff",
-        padding: "30px",
-        borderRadius: "20px",
-        width: "90%",
-        maxWidth: "800px",
+        padding: "35px",
+        borderRadius: "24px",
+        width: "95%",
+        maxWidth: "900px",
         maxHeight: "95vh",
         display: "flex",
         flexDirection: "column",
-        boxShadow: "0 25px 50px rgba(0,0,0,0.5)",
+        boxShadow: "0 30px 60px rgba(0,0,0,0.6)",
         overflow: "hidden"
       }}>
         
-        {/* Header mejorado */}
-        <div style={{ marginBottom: "25px", textAlign: "center" }}>
+        {/* Header ultra mejorado */}
+        <div style={{ marginBottom: "30px", textAlign: "center" }}>
           <h3 style={{ 
-            margin: "0 0 15px 0", 
-            fontSize: "24px", 
-            fontWeight: "700", 
-            color: "#1f2937" 
+            margin: "0 0 20px 0", 
+            fontSize: "28px", 
+            fontWeight: "900", 
+            color: "#1f2937",
+            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent"
           }}>
-            🎨 Editor de Imagen Avanzado
+            🎨 Editor de Imagen Ultra Profesional
           </h3>
           
           {/* Selector de relación de aspecto */}
-          <div style={{ marginBottom: "20px" }}>
-            <label style={{ fontSize: "14px", fontWeight: "600", marginBottom: "10px", display: "block" }}>
-              Relación de aspecto:
+          <div style={{ marginBottom: "25px" }}>
+            <label style={{ fontSize: "16px", fontWeight: "700", marginBottom: "15px", display: "block", color: "#374151" }}>
+              Relación de aspecto y formato:
             </label>
-            <div style={{ display: "flex", gap: "10px", justifyContent: "center", flexWrap: "wrap" }}>
+            <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
               {aspectRatios.map(ratio => (
                 <button
                   key={ratio.label}
                   onClick={() => setAspectRatio(ratio.value)}
                   style={{
-                    background: aspectRatio === ratio.value ? "#4f46e5" : "#f3f4f6",
+                    background: aspectRatio === ratio.value 
+                      ? "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)" 
+                      : "#f8fafc",
                     color: aspectRatio === ratio.value ? "white" : "#374151",
-                    border: "none",
-                    borderRadius: "6px",
-                    padding: "6px 12px",
-                    fontSize: "12px",
-                    fontWeight: "600",
-                    cursor: "pointer"
+                    border: aspectRatio === ratio.value ? "none" : "2px solid #e2e8f0",
+                    borderRadius: "10px",
+                    padding: "10px 16px",
+                    fontSize: "14px",
+                    fontWeight: "700",
+                    cursor: "pointer",
+                    transition: "all 0.3s ease",
+                    boxShadow: aspectRatio === ratio.value ? "0 4px 15px rgba(79, 70, 229, 0.4)" : "none"
                   }}
                 >
                   {ratio.label}
@@ -270,11 +331,12 @@ function CropModal({ imageSrc, onComplete, onCancel }) {
         <div style={{
           position: "relative",
           width: "100%",
-          height: "400px",
-          marginBottom: "25px",
-          backgroundColor: "#f9fafb",
-          borderRadius: "16px",
-          overflow: "hidden"
+          height: "450px",
+          marginBottom: "30px",
+          backgroundColor: "#f8fafc",
+          borderRadius: "20px",
+          overflow: "hidden",
+          border: "3px solid #e2e8f0"
         }}>
           <Cropper
             image={imageSrc}
@@ -289,23 +351,24 @@ function CropModal({ imageSrc, onComplete, onCancel }) {
             onCropComplete={(_, areaPixels) => setCroppedAreaPixels(areaPixels)}
             style={{
               containerStyle: {
-                borderRadius: "16px"
+                borderRadius: "20px",
+                filter: `brightness(${brightness}%) contrast(${contrast}%)`
               }
             }}
           />
         </div>
         
-        {/* Controles avanzados */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", marginBottom: "25px" }}>
+        {/* Controles ultra avanzados */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "25px", marginBottom: "30px" }}>
           <div>
             <label style={{ 
-              fontSize: "14px", 
-              fontWeight: "600",
-              marginBottom: "8px", 
+              fontSize: "16px", 
+              fontWeight: "700",
+              marginBottom: "12px", 
               display: "block",
               color: "#374151"
             }}>
-              Zoom: {zoom.toFixed(1)}x
+              🔍 Zoom: {zoom.toFixed(1)}x
             </label>
             <Slider
               value={zoom}
@@ -315,20 +378,21 @@ function CropModal({ imageSrc, onComplete, onCancel }) {
               onChange={(e, value) => setZoom(value)}
               style={{ 
                 width: "100%",
-                color: "#4f46e5"
+                color: "#4f46e5",
+                height: "8px"
               }}
             />
           </div>
           
           <div>
             <label style={{ 
-              fontSize: "14px", 
-              fontWeight: "600",
-              marginBottom: "8px", 
+              fontSize: "16px", 
+              fontWeight: "700",
+              marginBottom: "12px", 
               display: "block",
               color: "#374151"
             }}>
-              Rotación: {rotation}°
+              🔄 Rotación: {rotation}°
             </label>
             <Slider
               value={rotation}
@@ -338,13 +402,62 @@ function CropModal({ imageSrc, onComplete, onCancel }) {
               onChange={(e, value) => setRotation(value)}
               style={{ 
                 width: "100%",
-                color: "#10b981"
+                color: "#10b981",
+                height: "8px"
+              }}
+            />
+          </div>
+          
+          <div>
+            <label style={{ 
+              fontSize: "16px", 
+              fontWeight: "700",
+              marginBottom: "12px", 
+              display: "block",
+              color: "#374151"
+            }}>
+              ☀️ Brillo: {brightness}%
+            </label>
+            <Slider
+              value={brightness}
+              min={50}
+              max={150}
+              step={1}
+              onChange={(e, value) => setBrightness(value)}
+              style={{ 
+                width: "100%",
+                color: "#f59e0b",
+                height: "8px"
+              }}
+            />
+          </div>
+          
+          <div>
+            <label style={{ 
+              fontSize: "16px", 
+              fontWeight: "700",
+              marginBottom: "12px", 
+              display: "block",
+              color: "#374151"
+            }}>
+              🎨 Contraste: {contrast}%
+            </label>
+            <Slider
+              value={contrast}
+              min={50}
+              max={150}
+              step={1}
+              onChange={(e, value) => setContrast(value)}
+              style={{ 
+                width: "100%",
+                color: "#8b5cf6",
+                height: "8px"
               }}
             />
           </div>
         </div>
         
-        {/* Botones mejorados */}
+        {/* Botones ultra profesionales */}
         <div style={{
           display: "flex",
           justifyContent: "space-between",
@@ -356,36 +469,41 @@ function CropModal({ imageSrc, onComplete, onCancel }) {
               setCrop({ x: 0, y: 0 });
               setZoom(1);
               setRotation(0);
+              setBrightness(100);
+              setContrast(100);
             }}
             style={{
-              backgroundColor: "#f59e0b",
+              background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
               color: "white",
-              padding: "14px 28px",
-              borderRadius: "12px",
+              padding: "16px 32px",
+              borderRadius: "16px",
               border: "none",
               cursor: "pointer",
               fontSize: "16px",
-              fontWeight: "600",
-              flex: 1
+              fontWeight: "700",
+              flex: 1,
+              boxShadow: "0 8px 25px rgba(245, 158, 11, 0.4)",
+              transition: "all 0.3s ease"
             }}
           >
-            🔄 Reiniciar
+            🔄 Reiniciar Todo
           </button>
           
           <button
             onClick={onCancel}
             disabled={isProcessing}
             style={{
-              backgroundColor: "#6b7280",
+              background: "linear-gradient(135deg, #6b7280 0%, #4b5563 100%)",
               color: "white",
-              padding: "14px 28px",
-              borderRadius: "12px",
+              padding: "16px 32px",
+              borderRadius: "16px",
               border: "none",
               cursor: isProcessing ? "not-allowed" : "pointer",
               fontSize: "16px",
-              fontWeight: "600",
+              fontWeight: "700",
               flex: 1,
-              opacity: isProcessing ? 0.7 : 1
+              opacity: isProcessing ? 0.7 : 1,
+              boxShadow: "0 8px 25px rgba(107, 114, 128, 0.4)"
             }}
           >
             ❌ Cancelar
@@ -395,15 +513,20 @@ function CropModal({ imageSrc, onComplete, onCancel }) {
             onClick={handleCropComplete}
             disabled={!croppedAreaPixels || isProcessing}
             style={{
-              backgroundColor: !croppedAreaPixels || isProcessing ? "#9ca3af" : "#4f46e5",
+              background: !croppedAreaPixels || isProcessing 
+                ? "#9ca3af" 
+                : "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)",
               color: "white",
-              padding: "14px 28px",
-              borderRadius: "12px",
+              padding: "16px 32px",
+              borderRadius: "16px",
               border: "none",
               cursor: !croppedAreaPixels || isProcessing ? "not-allowed" : "pointer",
               fontSize: "16px",
-              fontWeight: "600",
-              flex: 2
+              fontWeight: "700",
+              flex: 2,
+              boxShadow: !croppedAreaPixels || isProcessing 
+                ? "none" 
+                : "0 8px 25px rgba(79, 70, 229, 0.5)"
             }}
           >
             {isProcessing ? "⏳ Procesando..." : "✅ Recortar y Usar"}
@@ -414,7 +537,7 @@ function CropModal({ imageSrc, onComplete, onCancel }) {
   );
 }
 
-// ✅ Componente de carga de imágenes ULTRA mejorado
+// ✅ Componente de carga de imágenes ULTRA mejorado con validaciones
 function ImageUploader({ onUploaded }) {
   const [loading, setLoading] = useState(false);
   const [showCrop, setShowCrop] = useState(false);
@@ -425,15 +548,15 @@ function ImageUploader({ onUploaded }) {
   const handleFileChange = async (file) => {
     if (!file) return;
     
-    // Validaciones mejoradas
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    // Validaciones ultra mejoradas
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp'];
     if (!allowedTypes.includes(file.type)) {
-      alert("Solo se permiten imágenes: JPG, PNG, GIF, WebP");
+      alert("⚠️ Solo se permiten imágenes: JPG, PNG, GIF, WebP, BMP");
       return;
     }
     
-    if (file.size > 15 * 1024 * 1024) {
-      alert("La imagen es demasiado grande. Máximo 15MB.");
+    if (file.size > 25 * 1024 * 1024) {
+      alert("⚠️ La imagen es demasiado grande. Máximo 25MB.");
       return;
     }
     
@@ -469,10 +592,17 @@ function ImageUploader({ onUploaded }) {
     }));
 
     try {
+      // Simular progreso
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => Math.min(prev + 10, 90));
+      }, 100);
+
       const response = await fetch("https://email-platform-api-j0fg.onrender.com/upload-image/", {
         method: "POST",
         body: formData,
       });
+      
+      clearInterval(progressInterval);
       
       if (!response.ok) {
         throw new Error('Error al subir imagen');
@@ -482,33 +612,43 @@ function ImageUploader({ onUploaded }) {
       const data = await response.json();
       const url = `https://email-platform-api-j0fg.onrender.com${data.url}`;
       onUploaded(url);
+      
+      setTimeout(() => setUploadProgress(0), 1000);
     } catch (error) {
       console.error("Error:", error);
-      alert("Error al subir la imagen. Inténtalo de nuevo.");
+      alert("❌ Error al subir la imagen. Inténtalo de nuevo.");
     } finally {
       setLoading(false);
       setImageSrc(null);
-      setUploadProgress(0);
     }
   };
 
   return (
-    <div style={{ marginBottom: "20px" }}>
-      <label className="block text-sm font-bold text-gray-700 mb-3">
-        📷 Subir Imagen (Drag & Drop, Recorte Avanzado, Múltiples Formatos)
+    <div style={{ marginBottom: "25px" }}>
+      <label className="block text-lg font-bold text-gray-700 mb-4">
+        📷 Subir Imagen Profesional (Drag & Drop, Recorte Ultra Avanzado)
       </label>
       
-      {/* Área de drop mejorada */}
+      {/* Área de drop ultra mejorada */}
       <div
         style={{
-          border: dragActive ? "3px dashed #4f46e5" : "3px dashed #d1d5db",
-          borderRadius: "16px",
-          padding: "30px",
+          border: dragActive 
+            ? "4px dashed #4f46e5" 
+            : loading 
+              ? "4px dashed #f59e0b" 
+              : "4px dashed #d1d5db",
+          borderRadius: "20px",
+          padding: "40px",
           textAlign: "center",
-          backgroundColor: dragActive ? "#f0f9ff" : loading ? "#fef3c7" : "#fafafa",
-          marginBottom: "15px",
-          transition: "all 0.3s ease",
-          position: "relative"
+          background: dragActive 
+            ? "linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)" 
+            : loading 
+              ? "linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%)" 
+              : "linear-gradient(135deg, #fafafa 0%, #f4f4f5 100%)",
+          marginBottom: "20px",
+          transition: "all 0.4s ease",
+          position: "relative",
+          boxShadow: "0 8px 25px rgba(0,0,0,0.1)"
         }}
         onDragOver={(e) => {
           e.preventDefault();
@@ -517,8 +657,12 @@ function ImageUploader({ onUploaded }) {
         onDragLeave={() => setDragActive(false)}
         onDrop={handleDrop}
       >
-        <div style={{ fontSize: "48px", marginBottom: "15px" }}>
-          {loading ? "⏳" : dragActive ? "📤" : "📷"}
+        <div style={{ 
+          fontSize: "72px", 
+          marginBottom: "20px",
+          filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.1))" 
+        }}>
+          {loading ? "⏳" : dragActive ? "🎯" : "📷"}
         </div>
         
         <input 
@@ -527,53 +671,88 @@ function ImageUploader({ onUploaded }) {
           onChange={handleInputChange}
           disabled={loading}
           style={{ 
-            marginBottom: "15px",
-            padding: "10px",
-            borderRadius: "8px",
+            marginBottom: "20px",
+            padding: "15px",
+            borderRadius: "12px",
             border: "2px solid #e5e7eb",
-            backgroundColor: "white"
+            backgroundColor: "white",
+            fontSize: "16px",
+            fontWeight: "600"
           }}
         />
         
-        <p style={{ 
-          fontSize: "16px", 
+        <h4 style={{ 
+          fontSize: "20px", 
           color: "#374151", 
-          margin: "10px 0",
-          fontWeight: "600"
+          margin: "15px 0",
+          fontWeight: "800"
         }}>
-          O arrastra una imagen aquí
-        </p>
+          {loading ? "🚀 Procesando tu imagen..." : "O arrastra una imagen aquí"}
+        </h4>
         
-        <p style={{ 
-          fontSize: "12px", 
-          color: "#6b7280", 
-          margin: "5px 0 0 0" 
+        <div style={{
+          display: "flex",
+          justifyContent: "center",
+          gap: "20px",
+          flexWrap: "wrap",
+          marginTop: "15px"
         }}>
-          Formatos: JPG, PNG, GIF, WebP • Máximo: 15MB
-        </p>
+          <span style={{ 
+            fontSize: "14px", 
+            color: "#10b981", 
+            fontWeight: "700",
+            background: "#dcfce7",
+            padding: "6px 12px",
+            borderRadius: "20px"
+          }}>
+            ✅ JPG, PNG, GIF, WebP, BMP
+          </span>
+          <span style={{ 
+            fontSize: "14px", 
+            color: "#3b82f6", 
+            fontWeight: "700",
+            background: "#dbeafe",
+            padding: "6px 12px",
+            borderRadius: "20px"
+          }}>
+            📏 Máximo: 25MB
+          </span>
+          <span style={{ 
+            fontSize: "14px", 
+            color: "#8b5cf6", 
+            fontWeight: "700",
+            background: "#f3e8ff",
+            padding: "6px 12px",
+            borderRadius: "20px"
+          }}>
+            🎨 Editor avanzado incluido
+          </span>
+        </div>
         
         {loading && (
-          <div style={{ marginTop: "15px" }}>
-            <p style={{ fontSize: "14px", color: "#4f46e5", margin: "5px 0", fontWeight: "600" }}>
-              🚀 Procesando imagen...
+          <div style={{ marginTop: "25px" }}>
+            <p style={{ fontSize: "16px", color: "#4f46e5", margin: "10px 0", fontWeight: "700" }}>
+              🎯 Optimizando imagen para email...
             </p>
-            {uploadProgress > 0 && (
+            <div style={{
+              width: "100%",
+              height: "12px",
+              backgroundColor: "#e5e7eb",
+              borderRadius: "6px",
+              overflow: "hidden",
+              marginTop: "15px"
+            }}>
               <div style={{
-                width: "100%",
-                height: "8px",
-                backgroundColor: "#e5e7eb",
-                borderRadius: "4px",
-                overflow: "hidden",
-                marginTop: "10px"
-              }}>
-                <div style={{
-                  width: `${uploadProgress}%`,
-                  height: "100%",
-                  backgroundColor: "#4f46e5",
-                  transition: "width 0.3s ease"
-                }} />
-              </div>
-            )}
+                width: `${uploadProgress}%`,
+                height: "100%",
+                background: "linear-gradient(90deg, #4f46e5, #7c3aed)",
+                transition: "width 0.3s ease",
+                borderRadius: "6px"
+              }} />
+            </div>
+            <p style={{ fontSize: "14px", color: "#6b7280", marginTop: "8px" }}>
+              {uploadProgress}% completado
+            </p>
           </div>
         )}
       </div>
@@ -593,193 +772,327 @@ function ImageUploader({ onUploaded }) {
   );
 }
 
-// NUEVO: Panel de Snippets
+// NUEVO: Panel de Snippets ultra mejorado
 function SnippetsPanel({ onSelectSnippet, onClose }) {
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
   
   const categories = [
-    { id: 'all', name: 'Todos' },
-    { id: 'greetings', name: 'Saludos' },
-    { id: 'signatures', name: 'Firmas' },
-    { id: 'cta', name: 'Call-to-Action' }
+    { id: 'all', name: 'Todos', icon: '📋' },
+    { id: 'greetings', name: 'Saludos', icon: '👋' },
+    { id: 'signatures', name: 'Firmas', icon: '✍️' },
+    { id: 'cta', name: 'Call-to-Action', icon: '🎯' },
+    { id: 'content', name: 'Contenido', icon: '📝' }
   ];
 
-  const filteredSnippets = selectedCategory === 'all' 
-    ? contentSnippets 
-    : contentSnippets.filter(s => s.category === selectedCategory);
+  const filteredSnippets = contentSnippets.filter(snippet => {
+    const matchesCategory = selectedCategory === 'all' || snippet.category === selectedCategory;
+    const matchesSearch = snippet.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         snippet.html.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
   return (
     <div style={{
       position: "fixed",
       top: "20px",
       right: "20px",
-      width: "400px",
+      width: "450px",
       backgroundColor: "white",
-      borderRadius: "16px",
-      boxShadow: "0 10px 40px rgba(0,0,0,0.2)",
+      borderRadius: "20px",
+      boxShadow: "0 20px 50px rgba(0,0,0,0.3)",
       zIndex: 9998,
-      maxHeight: "80vh",
-      overflow: "auto"
+      maxHeight: "85vh",
+      overflow: "hidden",
+      border: "3px solid #f0f9ff"
     }}>
-      <div style={{ padding: "20px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-          <h4 style={{ margin: 0, fontSize: "18px", fontWeight: "700" }}>🧩 Snippets</h4>
+      <div style={{ padding: "25px" }}>
+        {/* Header mejorado */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "25px" }}>
+          <h4 style={{ 
+            margin: 0, 
+            fontSize: "22px", 
+            fontWeight: "900",
+            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent"
+          }}>
+            🧩 Snippets Pro
+          </h4>
           <button 
             onClick={onClose}
             style={{
-              background: "#ef4444",
+              background: "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
               color: "white",
               border: "none",
-              borderRadius: "6px",
-              padding: "6px 12px",
+              borderRadius: "10px",
+              padding: "8px 16px",
               cursor: "pointer",
-              fontSize: "12px",
-              fontWeight: "600"
+              fontSize: "14px",
+              fontWeight: "700",
+              boxShadow: "0 4px 15px rgba(239, 68, 68, 0.4)"
             }}
           >
-            ✕
+            ✕ Cerrar
           </button>
         </div>
         
+        {/* Buscador */}
+        <input
+          type="text"
+          placeholder="🔍 Buscar snippets..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{
+            width: "100%",
+            padding: "12px 16px",
+            borderRadius: "12px",
+            border: "2px solid #e5e7eb",
+            fontSize: "14px",
+            marginBottom: "20px",
+            boxSizing: "border-box"
+          }}
+        />
+        
         {/* Categorías */}
-        <div style={{ display: "flex", gap: "8px", marginBottom: "20px", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: "10px", marginBottom: "25px", flexWrap: "wrap" }}>
           {categories.map(category => (
             <button
               key={category.id}
               onClick={() => setSelectedCategory(category.id)}
               style={{
-                padding: "6px 12px",
-                borderRadius: "20px",
+                padding: "8px 16px",
+                borderRadius: "25px",
                 border: "none",
-                backgroundColor: selectedCategory === category.id ? "#4f46e5" : "#f3f4f6",
+                background: selectedCategory === category.id 
+                  ? "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)"
+                  : "#f8fafc",
                 color: selectedCategory === category.id ? "white" : "#374151",
                 cursor: "pointer",
-                fontSize: "12px",
-                fontWeight: "600"
+                fontSize: "13px",
+                fontWeight: "700",
+                transition: "all 0.3s ease",
+                boxShadow: selectedCategory === category.id 
+                  ? "0 4px 15px rgba(79, 70, 229, 0.4)" 
+                  : "none"
               }}
             >
-              {category.name}
+              {category.icon} {category.name}
             </button>
           ))}
         </div>
 
         {/* Lista de snippets */}
-        {filteredSnippets.map(snippet => (
-          <div
-            key={snippet.id}
-            style={{
-              border: "1px solid #e5e7eb",
-              borderRadius: "8px",
-              marginBottom: "10px",
-              overflow: "hidden"
-            }}
-          >
+        <div style={{ maxHeight: "400px", overflowY: "auto" }}>
+          {filteredSnippets.map(snippet => (
             <div
+              key={snippet.id}
               style={{
-                padding: "15px",
-                cursor: "pointer",
-                backgroundColor: "#fafafa"
+                border: "2px solid #f1f5f9",
+                borderRadius: "16px",
+                marginBottom: "15px",
+                overflow: "hidden",
+                transition: "all 0.3s ease",
+                cursor: "pointer"
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = "0 8px 25px rgba(0,0,0,0.15)";
+                e.currentTarget.style.transform = "translateY(-2px)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = "none";
+                e.currentTarget.style.transform = "translateY(0)";
               }}
               onClick={() => {
                 onSelectSnippet(snippet.html);
                 onClose();
               }}
             >
-              <h5 style={{ margin: "0 0 5px 0", fontSize: "14px", fontWeight: "600" }}>
-                {snippet.name}
-              </h5>
-              <div 
-                dangerouslySetInnerHTML={{ __html: snippet.html.slice(0, 100) + "..." }}
-                style={{ fontSize: "12px", color: "#6b7280" }}
-              />
+              <div style={{
+                padding: "20px",
+                background: "linear-gradient(135deg, #fafafa 0%, #f4f4f5 100%)"
+              }}>
+                <h5 style={{ 
+                  margin: "0 0 10px 0", 
+                  fontSize: "16px", 
+                  fontWeight: "800",
+                  color: "#1f2937"
+                }}>
+                  {snippet.name}
+                </h5>
+                <div 
+                  dangerouslySetInnerHTML={{ __html: snippet.html.slice(0, 150) + "..." }}
+                  style={{ 
+                    fontSize: "12px", 
+                    color: "#6b7280",
+                    lineHeight: "1.5"
+                  }}
+                />
+                <div style={{
+                  marginTop: "10px",
+                  padding: "4px 8px",
+                  background: "#4f46e5",
+                  color: "white",
+                  borderRadius: "6px",
+                  fontSize: "10px",
+                  fontWeight: "700",
+                  display: "inline-block"
+                }}>
+                  {categories.find(c => c.id === snippet.category)?.name || snippet.category}
+                </div>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );
 }
 
-// NUEVO: Panel de Variables Dinámicas
+// NUEVO: Panel de Variables ultra mejorado
 function VariablesPanel({ onInsertVariable, onClose }) {
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  const filteredVariables = dynamicVariables.filter(variable =>
+    variable.key.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    variable.description.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div style={{
       position: "fixed",
       bottom: "20px",
       right: "20px",
-      width: "350px",
+      width: "400px",
       backgroundColor: "white",
-      borderRadius: "16px",
-      boxShadow: "0 10px 40px rgba(0,0,0,0.2)",
+      borderRadius: "20px",
+      boxShadow: "0 20px 50px rgba(0,0,0,0.3)",
       zIndex: 9997,
-      maxHeight: "60vh",
-      overflow: "auto"
+      maxHeight: "70vh",
+      overflow: "hidden",
+      border: "3px solid #f0fdf4"
     }}>
-      <div style={{ padding: "20px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-          <h4 style={{ margin: 0, fontSize: "18px", fontWeight: "700" }}>🔧 Variables</h4>
+      <div style={{ padding: "25px" }}>
+        {/* Header mejorado */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "25px" }}>
+          <h4 style={{ 
+            margin: 0, 
+            fontSize: "22px", 
+            fontWeight: "900",
+            background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent"
+          }}>
+            🔧 Variables Pro
+          </h4>
           <button 
             onClick={onClose}
             style={{
-              background: "#ef4444",
+              background: "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
               color: "white",
               border: "none",
-              borderRadius: "6px",
-              padding: "6px 12px",
+              borderRadius: "10px",
+              padding: "8px 16px",
               cursor: "pointer",
-              fontSize: "12px",
-              fontWeight: "600"
+              fontSize: "14px",
+              fontWeight: "700",
+              boxShadow: "0 4px 15px rgba(239, 68, 68, 0.4)"
             }}
           >
-            ✕
+            ✕ Cerrar
           </button>
         </div>
+        
+        {/* Buscador */}
+        <input
+          type="text"
+          placeholder="🔍 Buscar variables..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{
+            width: "100%",
+            padding: "12px 16px",
+            borderRadius: "12px",
+            border: "2px solid #e5e7eb",
+            fontSize: "14px",
+            marginBottom: "20px",
+            boxSizing: "border-box"
+          }}
+        />
 
-        {dynamicVariables.map(variable => (
-          <div
-            key={variable.key}
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              padding: "10px",
-              borderBottom: "1px solid #f3f4f6",
-              cursor: "pointer"
-            }}
-            onClick={() => onInsertVariable(variable.key)}
-          >
-            <div>
-              <code style={{
-                backgroundColor: "#f3f4f6",
-                padding: "2px 6px",
-                borderRadius: "4px",
-                fontSize: "12px",
-                fontWeight: "600"
+        {/* Lista de variables */}
+        <div style={{ maxHeight: "400px", overflowY: "auto" }}>
+          {filteredVariables.map(variable => (
+            <div
+              key={variable.key}
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: "15px",
+                borderBottom: "2px solid #f3f4f6",
+                cursor: "pointer",
+                transition: "all 0.3s ease",
+                borderRadius: "12px",
+                marginBottom: "8px"
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "#f0fdf4";
+                e.currentTarget.style.transform = "translateX(5px)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "transparent";
+                e.currentTarget.style.transform = "translateX(0)";
+              }}
+              onClick={() => onInsertVariable(variable.key)}
+            >
+              <div>
+                <code style={{
+                  backgroundColor: "#dcfce7",
+                  padding: "6px 12px",
+                  borderRadius: "8px",
+                  fontSize: "14px",
+                  fontWeight: "800",
+                  color: "#065f46",
+                  border: "2px solid #10b981"
+                }}>
+                  {variable.key}
+                </code>
+                <p style={{
+                  margin: "8px 0 4px 0",
+                  fontSize: "13px",
+                  color: "#374151",
+                  fontWeight: "600"
+                }}>
+                  {variable.description}
+                </p>
+                {variable.example && (
+                  <p style={{
+                    margin: "4px 0 0 0",
+                    fontSize: "11px",
+                    color: "#6b7280",
+                    fontStyle: "italic"
+                  }}>
+                    Ej: {variable.example}
+                  </p>
+                )}
+              </div>
+              <button style={{
+                background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                color: "white",
+                border: "none",
+                borderRadius: "8px",
+                padding: "8px 12px",
+                fontSize: "14px",
+                fontWeight: "700",
+                cursor: "pointer",
+                boxShadow: "0 4px 15px rgba(16, 185, 129, 0.4)"
               }}>
-                {variable.key}
-              </code>
-              <p style={{
-                margin: "4px 0 0 0",
-                fontSize: "11px",
-                color: "#6b7280"
-              }}>
-                {variable.description}
-              </p>
+                ➕ Usar
+              </button>
             </div>
-            <button style={{
-              backgroundColor: "#4f46e5",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
-              padding: "4px 8px",
-              fontSize: "12px",
-              fontWeight: "600",
-              cursor: "pointer"
-            }}>
-              +
-            </button>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -787,7 +1100,7 @@ function VariablesPanel({ onInsertVariable, onClose }) {
 
 // ✅ COMPONENTE PRINCIPAL EmailCompose ULTRA PROFESIONAL
 const EmailCompose = () => {
-  // Estados existentes
+  // Estados principales
   const [formData, setFormData] = useState({ 
     to: '', 
     cc: '',
@@ -799,6 +1112,7 @@ const EmailCompose = () => {
     track_opens: true,
     track_clicks: true
   });
+  
   const [mailboxes, setMailboxes] = useState([]);
   const [status, setStatus] = useState('');
   const [loading, setLoading] = useState(false);
@@ -806,7 +1120,7 @@ const EmailCompose = () => {
   const [galleryFilter, setGalleryFilter] = useState('');
   const [showEmoji, setShowEmoji] = useState(false);
   
-  // NUEVOS ESTADOS AVANZADOS
+  // Estados avanzados
   const [editorMode, setEditorMode] = useState('html');
   const [showSnippets, setShowSnippets] = useState(false);
   const [showVariables, setShowVariables] = useState(false);
@@ -820,12 +1134,15 @@ const EmailCompose = () => {
     subjectScore: 0,
     readabilityScore: 0,
     spamScore: 0,
-    readingTime: 0
+    engagementScore: 0,
+    readingTime: 0,
+    imageCount: 0,
+    linkCount: 0
   });
   
   const quillRef = useRef(null);
 
-  // Análisis en tiempo real
+  // Análisis en tiempo real optimizado
   useEffect(() => {
     const analysis = analyzeEmailContent(formData.subject, formData.body);
     setEmailAnalysis(analysis);
@@ -952,7 +1269,7 @@ const EmailCompose = () => {
   const handleSaveDraft = async () => {
     try {
       setSaveAsDraft(true);
-      // Aquí implementarías el guardado en tu API
+      // Simular guardado en API
       setTimeout(() => {
         setStatus('💾 Borrador guardado correctamente');
         setSaveAsDraft(false);
@@ -1035,11 +1352,11 @@ const EmailCompose = () => {
   };
 
   return (
-    <div className="bg-white overflow-hidden shadow-2xl rounded-3xl" style={{ maxWidth: "1400px", margin: "0 auto" }}>
+    <div className="bg-white overflow-hidden shadow-2xl rounded-3xl" style={{ maxWidth: "1600px", margin: "0 auto" }}>
       {/* Header ultra profesional */}
       <div style={{ 
         background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)", 
-        padding: "30px 40px",
+        padding: "35px 45px",
         color: "white",
         position: "relative",
         overflow: "hidden"
@@ -1049,26 +1366,30 @@ const EmailCompose = () => {
           top: 0,
           left: 0,
           right: 0,
-          height: "4px",
-          background: "linear-gradient(90deg, #3b82f6, #8b5cf6, #ef4444, #f59e0b)"
+          height: "6px",
+          background: "linear-gradient(90deg, #3b82f6, #8b5cf6, #ef4444, #f59e0b, #10b981)"
         }} />
         
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", position: "relative", zIndex: 2 }}>
           <div>
-            <h3 style={{ margin: "0 0 8px 0", fontSize: "32px", fontWeight: "900", letterSpacing: "-1px" }}>
-              🚀 Email Composer Ultra Pro
+            <h3 style={{ margin: "0 0 10px 0", fontSize: "36px", fontWeight: "900", letterSpacing: "-1px" }}>
+              🚀 Email Composer Ultra Pro Max
             </h3>
-            <p style={{ margin: 0, fontSize: "16px", opacity: 0.9 }}>
-              Editor profesional con IA, análisis avanzado y herramientas premium
+            <p style={{ margin: 0, fontSize: "18px", opacity: 0.9, fontWeight: "500" }}>
+              Editor profesional con IA, análisis avanzado, imágenes movibles y herramientas premium
             </p>
           </div>
-          <div style={{ display: "flex", gap: "15px", alignItems: "center" }}>
+          <div style={{ display: "flex", gap: "20px", alignItems: "center" }}>
             <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: "18px", fontWeight: "800" }}>{emailAnalysis.wordCount}</div>
+              <div style={{ fontSize: "20px", fontWeight: "900" }}>{emailAnalysis.wordCount}</div>
               <div style={{ fontSize: "12px", opacity: 0.8 }}>palabras</div>
             </div>
             <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: "18px", fontWeight: "800" }}>{emailAnalysis.readingTime}</div>
+              <div style={{ fontSize: "20px", fontWeight: "900" }}>{emailAnalysis.imageCount}</div>
+              <div style={{ fontSize: "12px", opacity: 0.8 }}>imágenes</div>
+            </div>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: "20px", fontWeight: "900" }}>{emailAnalysis.readingTime}</div>
               <div style={{ fontSize: "12px", opacity: 0.8 }}>min lectura</div>
             </div>
             <button
@@ -1078,13 +1399,14 @@ const EmailCompose = () => {
               style={{
                 background: "rgba(255,255,255,0.2)",
                 border: "none",
-                borderRadius: "12px",
-                padding: "12px 20px",
+                borderRadius: "14px",
+                padding: "14px 24px",
                 color: "white",
                 cursor: saveAsDraft ? "not-allowed" : "pointer",
-                fontSize: "14px",
-                fontWeight: "700",
-                backdropFilter: "blur(10px)"
+                fontSize: "15px",
+                fontWeight: "800",
+                backdropFilter: "blur(10px)",
+                boxShadow: "0 4px 15px rgba(0,0,0,0.2)"
               }}
             >
               {saveAsDraft ? "💾 Guardando..." : "💾 Guardar Borrador"}
@@ -1093,18 +1415,18 @@ const EmailCompose = () => {
         </div>
       </div>
 
-      <div className="px-8 py-10">
-        {/* Toolbar avanzado */}
+      <div className="px-10 py-12">
+        {/* Toolbar ultra avanzado */}
         <div style={{ 
           display: "flex", 
-          gap: "20px", 
-          marginBottom: "30px", 
+          gap: "25px", 
+          marginBottom: "35px", 
           flexWrap: "wrap",
           alignItems: "center",
-          padding: "25px",
+          padding: "30px",
           background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-          borderRadius: "20px",
-          boxShadow: "0 15px 35px rgba(240, 147, 251, 0.4)"
+          borderRadius: "25px",
+          boxShadow: "0 20px 40px rgba(240, 147, 251, 0.5)"
         }}>
           <button
             type="button"
@@ -1112,16 +1434,17 @@ const EmailCompose = () => {
             style={{
               background: "rgba(255,255,255,0.95)",
               border: "none",
-              borderRadius: "16px",
-              padding: "16px 24px",
+              borderRadius: "18px",
+              padding: "18px 28px",
               cursor: "pointer",
-              fontSize: "16px",
-              fontWeight: "800",
+              fontSize: "17px",
+              fontWeight: "900",
               color: "#1f2937",
-              boxShadow: "0 4px 15px rgba(0,0,0,0.1)"
+              boxShadow: "0 6px 20px rgba(0,0,0,0.15)",
+              transition: "all 0.3s ease"
             }}
           >
-            🧩 Snippets Pro
+            🧩 Snippets Ultra Pro
           </button>
           
           <button
@@ -1130,16 +1453,16 @@ const EmailCompose = () => {
             style={{
               background: "rgba(255,255,255,0.95)",
               border: "none",
-              borderRadius: "16px",
-              padding: "16px 24px",
+              borderRadius: "18px",
+              padding: "18px 28px",
               cursor: "pointer",
-              fontSize: "16px",
-              fontWeight: "800",
+              fontSize: "17px",
+              fontWeight: "900",
               color: "#1f2937",
-              boxShadow: "0 4px 15px rgba(0,0,0,0.1)"
+              boxShadow: "0 6px 20px rgba(0,0,0,0.15)"
             }}
           >
-            🔧 Variables Dinámicas
+            🔧 Variables Dinámicas Pro
           </button>
           
           <button
@@ -1148,176 +1471,217 @@ const EmailCompose = () => {
             style={{
               background: "rgba(255,255,255,0.95)",
               border: "none",
-              borderRadius: "16px",
-              padding: "16px 24px",
+              borderRadius: "18px",
+              padding: "18px 28px",
               cursor: "pointer",
-              fontSize: "16px",
-              fontWeight: "800",
+              fontSize: "17px",
+              fontWeight: "900",
               color: "#1f2937",
-              boxShadow: "0 4px 15px rgba(0,0,0,0.1)"
+              boxShadow: "0 6px 20px rgba(0,0,0,0.15)"
             }}
           >
-            😊 Emojis & Símbolos
+            😊 Emojis & Símbolos Premium
           </button>
 
-          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "20px" }}>
-            <label style={{ display: "flex", alignItems: "center", gap: "10px", color: "white", fontSize: "16px", fontWeight: "700" }}>
+          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "25px" }}>
+            <label style={{ display: "flex", alignItems: "center", gap: "12px", color: "white", fontSize: "17px", fontWeight: "800" }}>
               <input
                 type="checkbox"
                 checked={showPreview}
                 onChange={(e) => setShowPreview(e.target.checked)}
-                style={{ transform: "scale(1.5)" }}
+                style={{ transform: "scale(1.8)" }}
               />
-              Vista previa en vivo
+              Vista previa ultra realista
             </label>
           </div>
         </div>
 
-        {/* Panel de análisis mejorado */}
+        {/* Panel de análisis ultra mejorado */}
         <div style={{
           background: "linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%)",
-          padding: "25px",
-          borderRadius: "20px",
-          marginBottom: "30px",
-          border: "2px solid #10b981"
+          padding: "30px",
+          borderRadius: "25px",
+          marginBottom: "35px",
+          border: "3px solid #10b981",
+          boxShadow: "0 15px 35px rgba(16, 185, 129, 0.2)"
         }}>
-          <h4 style={{ margin: "0 0 20px 0", fontSize: "20px", fontWeight: "800", color: "#065f46" }}>
-            📊 Análisis Inteligente del Email
+          <h4 style={{ margin: "0 0 25px 0", fontSize: "24px", fontWeight: "900", color: "#065f46" }}>
+            📊 Análisis Inteligente Ultra Avanzado del Email
           </h4>
           
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "20px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "25px" }}>
+            {/* Asunto */}
             <div style={{ textAlign: "center" }}>
               <div style={{
-                width: "80px",
-                height: "80px",
+                width: "90px",
+                height: "90px",
                 borderRadius: "50%",
                 background: `conic-gradient(#10b981 ${emailAnalysis.subjectScore * 3.6}deg, #e5e7eb 0deg)`,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                margin: "0 auto 12px"
+                margin: "0 auto 15px",
+                boxShadow: "0 8px 25px rgba(16, 185, 129, 0.3)"
               }}>
                 <div style={{
-                  width: "60px",
-                  height: "60px",
+                  width: "70px",
+                  height: "70px",
                   borderRadius: "50%",
                   background: "white",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontWeight: "800",
-                  fontSize: "16px",
+                  fontWeight: "900",
+                  fontSize: "18px",
                   color: "#10b981"
                 }}>
                   {emailAnalysis.subjectScore}%
                 </div>
               </div>
-              <div style={{ color: "#065f46", fontWeight: "700", fontSize: "14px" }}>Asunto</div>
-              <div style={{ color: "#6b7280", fontSize: "12px" }}>Optimización</div>
+              <div style={{ color: "#065f46", fontWeight: "800", fontSize: "15px" }}>📝 Asunto</div>
+              <div style={{ color: "#6b7280", fontSize: "12px" }}>Optimización SEO</div>
             </div>
             
+            {/* Legibilidad */}
             <div style={{ textAlign: "center" }}>
               <div style={{
-                width: "80px",
-                height: "80px",
+                width: "90px",
+                height: "90px",
                 borderRadius: "50%",
                 background: `conic-gradient(#3b82f6 ${emailAnalysis.readabilityScore * 3.6}deg, #e5e7eb 0deg)`,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                margin: "0 auto 12px"
+                margin: "0 auto 15px",
+                boxShadow: "0 8px 25px rgba(59, 130, 246, 0.3)"
               }}>
                 <div style={{
-                  width: "60px",
-                  height: "60px",
+                  width: "70px",
+                  height: "70px",
                   borderRadius: "50%",
                   background: "white",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontWeight: "800",
-                  fontSize: "16px",
+                  fontWeight: "900",
+                  fontSize: "18px",
                   color: "#3b82f6"
                 }}>
                   {emailAnalysis.readabilityScore}%
                 </div>
               </div>
-              <div style={{ color: "#1e40af", fontWeight: "700", fontSize: "14px" }}>Legibilidad</div>
+              <div style={{ color: "#1e40af", fontWeight: "800", fontSize: "15px" }}>📚 Legibilidad</div>
               <div style={{ color: "#6b7280", fontSize: "12px" }}>Comprensión</div>
             </div>
             
+            {/* Anti-Spam */}
             <div style={{ textAlign: "center" }}>
               <div style={{
-                width: "80px",
-                height: "80px",
+                width: "90px",
+                height: "90px",
                 borderRadius: "50%",
                 background: `conic-gradient(${emailAnalysis.spamScore >= 80 ? '#10b981' : emailAnalysis.spamScore >= 60 ? '#f59e0b' : '#ef4444'} ${emailAnalysis.spamScore * 3.6}deg, #e5e7eb 0deg)`,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                margin: "0 auto 12px"
+                margin: "0 auto 15px",
+                boxShadow: `0 8px 25px ${emailAnalysis.spamScore >= 80 ? 'rgba(16, 185, 129, 0.3)' : emailAnalysis.spamScore >= 60 ? 'rgba(245, 158, 11, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`
               }}>
                 <div style={{
-                  width: "60px",
-                  height: "60px",
+                  width: "70px",
+                  height: "70px",
                   borderRadius: "50%",
                   background: "white",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontWeight: "800",
-                  fontSize: "16px",
+                  fontWeight: "900",
+                  fontSize: "18px",
                   color: emailAnalysis.spamScore >= 80 ? '#10b981' : emailAnalysis.spamScore >= 60 ? '#f59e0b' : '#ef4444'
                 }}>
                   {emailAnalysis.spamScore}%
                 </div>
               </div>
-              <div style={{ color: "#dc2626", fontWeight: "700", fontSize: "14px" }}>Anti-Spam</div>
+              <div style={{ color: "#dc2626", fontWeight: "800", fontSize: "15px" }}>🛡️ Anti-Spam</div>
               <div style={{ color: "#6b7280", fontSize: "12px" }}>Entregabilidad</div>
+            </div>
+            
+            {/* Engagement */}
+            <div style={{ textAlign: "center" }}>
+              <div style={{
+                width: "90px",
+                height: "90px",
+                borderRadius: "50%",
+                background: `conic-gradient(#8b5cf6 ${emailAnalysis.engagementScore * 3.6}deg, #e5e7eb 0deg)`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                margin: "0 auto 15px",
+                boxShadow: "0 8px 25px rgba(139, 92, 246, 0.3)"
+              }}>
+                <div style={{
+                  width: "70px",
+                  height: "70px",
+                  borderRadius: "50%",
+                  background: "white",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontWeight: "900",
+                  fontSize: "18px",
+                  color: "#8b5cf6"
+                }}>
+                  {emailAnalysis.engagementScore}%
+                </div>
+              </div>
+              <div style={{ color: "#7c3aed", fontWeight: "800", fontSize: "15px" }}>🎯 Engagement</div>
+              <div style={{ color: "#6b7280", fontSize: "12px" }}>Interacción</div>
             </div>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Configuración avanzada */}
+        <form onSubmit={handleSubmit} className="space-y-10">
+          {/* Configuración ultra avanzada */}
           <div style={{
             background: "linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)",
-            padding: "30px",
-            borderRadius: "20px",
-            marginBottom: "30px"
+            padding: "35px",
+            borderRadius: "25px",
+            marginBottom: "35px",
+            boxShadow: "0 15px 35px rgba(168, 237, 234, 0.3)"
           }}>
-            <h4 style={{ margin: "0 0 25px 0", fontSize: "24px", fontWeight: "800", color: "#1f2937" }}>
-              ⚙️ Configuración Profesional
+            <h4 style={{ margin: "0 0 30px 0", fontSize: "26px", fontWeight: "900", color: "#1f2937" }}>
+              ⚙️ Configuración Ultra Profesional
             </h4>
             
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "25px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "30px" }}>
               {/* Modo de edición */}
               <div>
-                <label style={{ display: "block", fontSize: "16px", fontWeight: "700", marginBottom: "10px", color: "#374151" }}>
-                  Tipo de contenido
+                <label style={{ display: "block", fontSize: "18px", fontWeight: "800", marginBottom: "12px", color: "#374151" }}>
+                  🎨 Tipo de contenido
                 </label>
                 <select 
                   value={editorMode}
                   onChange={(e) => handleModeChange(e.target.value)}
                   style={{
                     width: "100%",
-                    padding: "14px 16px",
-                    borderRadius: "12px",
-                    border: "2px solid #e5e7eb",
-                    fontSize: "16px",
-                    fontWeight: "600",
-                    background: "white"
+                    padding: "16px 20px",
+                    borderRadius: "16px",
+                    border: "3px solid #e5e7eb",
+                    fontSize: "17px",
+                    fontWeight: "700",
+                    background: "white",
+                    boxShadow: "0 4px 15px rgba(0,0,0,0.1)"
                   }}
                 >
-                  <option value="html">🎨 HTML Rico (Recomendado)</option>
-                  <option value="plain">📝 Texto Plano</option>
+                  <option value="html">🎨 HTML Ultra Rico (Recomendado)</option>
+                  <option value="plain">📝 Texto Plano Profesional</option>
                 </select>
               </div>
 
               {/* Prioridad */}
               <div>
-                <label style={{ display: "block", fontSize: "16px", fontWeight: "700", marginBottom: "10px", color: "#374151" }}>
-                  Prioridad
+                <label style={{ display: "block", fontSize: "18px", fontWeight: "800", marginBottom: "12px", color: "#374151" }}>
+                  ⚡ Prioridad del email
                 </label>
                 <select 
                   name="priority"
@@ -1325,60 +1689,61 @@ const EmailCompose = () => {
                   onChange={handleChange}
                   style={{
                     width: "100%",
-                    padding: "14px 16px",
-                    borderRadius: "12px",
-                    border: "2px solid #e5e7eb",
-                    fontSize: "16px",
-                    fontWeight: "600",
-                    background: "white"
+                    padding: "16px 20px",
+                    borderRadius: "16px",
+                    border: "3px solid #e5e7eb",
+                    fontSize: "17px",
+                    fontWeight: "700",
+                    background: "white",
+                    boxShadow: "0 4px 15px rgba(0,0,0,0.1)"
                   }}
                 >
-                  <option value="low">🟢 Baja</option>
-                  <option value="normal">🟡 Normal</option>
-                  <option value="high">🔴 Alta</option>
+                  <option value="low">🟢 Prioridad Baja</option>
+                  <option value="normal">🟡 Prioridad Normal</option>
+                  <option value="high">🔴 Alta Prioridad (Urgente)</option>
                 </select>
               </div>
 
               {/* Opciones de tracking */}
               <div>
-                <label style={{ display: "block", fontSize: "16px", fontWeight: "700", marginBottom: "10px", color: "#374151" }}>
-                  Seguimiento
+                <label style={{ display: "block", fontSize: "18px", fontWeight: "800", marginBottom: "12px", color: "#374151" }}>
+                  📊 Seguimiento avanzado
                 </label>
-                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                  <label style={{ display: "flex", alignItems: "center", gap: "12px", fontSize: "16px", fontWeight: "600", color: "#374151", cursor: "pointer" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
+                  <label style={{ display: "flex", alignItems: "center", gap: "15px", fontSize: "17px", fontWeight: "700", color: "#374151", cursor: "pointer" }}>
                     <input
                       type="checkbox"
                       name="track_opens"
                       checked={formData.track_opens}
                       onChange={(e) => setFormData(prev => ({ ...prev, track_opens: e.target.checked }))}
-                      style={{ transform: "scale(1.3)" }}
+                      style={{ transform: "scale(1.5)" }}
                     />
-                    📊 Rastrear aperturas
+                    📊 Rastrear aperturas de email
                   </label>
                   
-                  <label style={{ display: "flex", alignItems: "center", gap: "12px", fontSize: "16px", fontWeight: "600", color: "#374151", cursor: "pointer" }}>
+                  <label style={{ display: "flex", alignItems: "center", gap: "15px", fontSize: "17px", fontWeight: "700", color: "#374151", cursor: "pointer" }}>
                     <input
                       type="checkbox"
                       name="track_clicks"
                       checked={formData.track_clicks}
                       onChange={(e) => setFormData(prev => ({ ...prev, track_clicks: e.target.checked }))}
-                      style={{ transform: "scale(1.3)" }}
+                      style={{ transform: "scale(1.5)" }}
                     />
-                    🔗 Rastrear clicks
+                    🔗 Rastrear clicks en enlaces
                   </label>
                 </div>
               </div>
 
               {/* Programación */}
               <div>
-                <label style={{ display: "flex", alignItems: "center", gap: "12px", fontSize: "16px", fontWeight: "700", marginBottom: "10px", color: "#374151", cursor: "pointer" }}>
+                <label style={{ display: "flex", alignItems: "center", gap: "15px", fontSize: "18px", fontWeight: "800", marginBottom: "12px", color: "#374151", cursor: "pointer" }}>
                   <input
                     type="checkbox"
                     checked={scheduledSend}
                     onChange={(e) => setScheduledSend(e.target.checked)}
-                    style={{ transform: "scale(1.3)" }}
+                    style={{ transform: "scale(1.5)" }}
                   />
-                  ⏰ Envío programado
+                  ⏰ Envío programado profesional
                 </label>
                 
                 {scheduledSend && (
@@ -1388,12 +1753,13 @@ const EmailCompose = () => {
                     onChange={(e) => setScheduleDate(e.target.value)}
                     style={{
                       width: "100%",
-                      padding: "14px 16px",
-                      borderRadius: "12px",
-                      border: "2px solid #e5e7eb",
-                      fontSize: "16px",
-                      fontWeight: "600",
-                      background: "white"
+                      padding: "16px 20px",
+                      borderRadius: "16px",
+                      border: "3px solid #e5e7eb",
+                      fontSize: "17px",
+                      fontWeight: "700",
+                      background: "white",
+                      boxShadow: "0 4px 15px rgba(0,0,0,0.1)"
                     }}
                   />
                 )}
@@ -1401,10 +1767,10 @@ const EmailCompose = () => {
             </div>
           </div>
 
-          {/* Selección de buzón */}
+          {/* Selección de buzón mejorada */}
           <div>
-            <label className="block text-lg font-bold text-gray-700 mb-3">
-              📮 Buzón de envío
+            <label className="block text-xl font-black text-gray-700 mb-4">
+              📮 Buzón de envío profesional
             </label>
             <select
               name="mailbox_id"
@@ -1413,29 +1779,29 @@ const EmailCompose = () => {
               required
               style={{
                 width: "100%",
-                padding: "18px 20px",
-                borderRadius: "16px",
-                border: "3px solid #e5e7eb",
-                fontSize: "18px",
-                fontWeight: "600",
+                padding: "20px 24px",
+                borderRadius: "18px",
+                border: "4px solid #e5e7eb",
+                fontSize: "19px",
+                fontWeight: "700",
                 background: "white",
-                boxShadow: "0 4px 15px rgba(0,0,0,0.08)"
+                boxShadow: "0 6px 20px rgba(0,0,0,0.1)"
               }}
             >
-              <option value="">Seleccionar buzón profesional...</option>
+              <option value="">🎯 Seleccionar buzón ultra profesional...</option>
               {mailboxes.map(mailbox => (
                 <option key={mailbox.id} value={mailbox.id}>
                   {mailbox.name} ({mailbox.email})
-                  {mailbox.is_verified ? " ✅" : " ⚠️"}
+                  {mailbox.is_verified ? " ✅ Verificado" : " ⚠️ Sin verificar"}
                 </option>
               ))}
             </select>
           </div>
 
-          {/* Campos de destinatarios mejorados */}
-          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: "20px" }}>
+          {/* Campos de destinatarios ultra mejorados */}
+          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: "25px" }}>
             <div>
-              <label className="block text-lg font-bold text-gray-700 mb-3">
+              <label className="block text-xl font-black text-gray-700 mb-4">
                 📧 Para (obligatorio)
               </label>
               <input
@@ -1447,19 +1813,20 @@ const EmailCompose = () => {
                 placeholder="cliente@empresa.com"
                 style={{
                   width: "100%",
-                  padding: "18px 20px",
-                  borderRadius: "16px",
-                  border: "3px solid #e5e7eb",
-                  fontSize: "18px",
-                  fontWeight: "500",
-                  background: "white"
+                  padding: "20px 24px",
+                  borderRadius: "18px",
+                  border: "4px solid #e5e7eb",
+                  fontSize: "19px",
+                  fontWeight: "600",
+                  background: "white",
+                  boxShadow: "0 6px 20px rgba(0,0,0,0.1)"
                 }}
               />
             </div>
 
             <div>
-              <label className="block text-lg font-bold text-gray-700 mb-3">
-                📎 CC
+              <label className="block text-xl font-black text-gray-700 mb-4">
+                📎 CC (Copia)
               </label>
               <input
                 type="text"
@@ -1469,18 +1836,19 @@ const EmailCompose = () => {
                 placeholder="cc@empresa.com"
                 style={{
                   width: "100%",
-                  padding: "18px 20px",
-                  borderRadius: "16px",
-                  border: "3px solid #e5e7eb",
-                  fontSize: "18px",
-                  fontWeight: "500"
+                  padding: "20px 24px",
+                  borderRadius: "18px",
+                  border: "4px solid #e5e7eb",
+                  fontSize: "19px",
+                  fontWeight: "600",
+                  boxShadow: "0 6px 20px rgba(0,0,0,0.1)"
                 }}
               />
             </div>
 
             <div>
-              <label className="block text-lg font-bold text-gray-700 mb-3">
-                🤫 BCC
+              <label className="block text-xl font-black text-gray-700 mb-4">
+                🤫 BCC (Copia oculta)
               </label>
               <input
                 type="text"
@@ -1490,31 +1858,33 @@ const EmailCompose = () => {
                 placeholder="bcc@empresa.com"
                 style={{
                   width: "100%",
-                  padding: "18px 20px",
-                  borderRadius: "16px",
-                  border: "3px solid #e5e7eb",
-                  fontSize: "18px",
-                  fontWeight: "500"
+                  padding: "20px 24px",
+                  borderRadius: "18px",
+                  border: "4px solid #e5e7eb",
+                  fontSize: "19px",
+                  fontWeight: "600",
+                  boxShadow: "0 6px 20px rgba(0,0,0,0.1)"
                 }}
               />
             </div>
           </div>
 
-          {/* Asunto con análisis */}
+          {/* Asunto con análisis ultra avanzado */}
           <div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-              <label className="block text-lg font-bold text-gray-700">
-                📝 Asunto del correo
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "15px" }}>
+              <label className="block text-xl font-black text-gray-700">
+                📝 Asunto del correo profesional
               </label>
               <span style={{
-                padding: "6px 12px",
-                borderRadius: "20px",
-                fontSize: "12px",
-                fontWeight: "700",
+                padding: "8px 16px",
+                borderRadius: "25px",
+                fontSize: "14px",
+                fontWeight: "800",
                 color: formData.subject.length >= 30 && formData.subject.length <= 50 ? "#10b981" : "#f59e0b",
-                backgroundColor: formData.subject.length >= 30 && formData.subject.length <= 50 ? "#dcfce7" : "#fef3c7"
+                backgroundColor: formData.subject.length >= 30 && formData.subject.length <= 50 ? "#dcfce7" : "#fef3c7",
+                boxShadow: "0 4px 15px rgba(0,0,0,0.1)"
               }}>
-                {formData.subject.length}/50 (Score: {emailAnalysis.subjectScore}%)
+                {formData.subject.length}/50 caracteres (Score: {emailAnalysis.subjectScore}%)
               </span>
             </div>
             <input
@@ -1523,42 +1893,43 @@ const EmailCompose = () => {
               value={formData.subject}
               onChange={handleChange}
               required
-              placeholder="Asunto profesional y atractivo..."
+              placeholder="✨ Escribe un asunto profesional y atractivo que genere apertura..."
               style={{
                 width: "100%",
-                padding: "20px 24px",
-                borderRadius: "16px",
-                border: "3px solid #e5e7eb",
-                fontSize: "20px",
-                fontWeight: "600",
+                padding: "22px 28px",
+                borderRadius: "18px",
+                border: "4px solid #e5e7eb",
+                fontSize: "21px",
+                fontWeight: "700",
                 background: "white",
-                boxShadow: "0 4px 15px rgba(0,0,0,0.08)"
+                boxShadow: "0 8px 25px rgba(0,0,0,0.1)"
               }}
             />
           </div>
 
-          {/* Área de contenido principal */}
-          <div style={{ display: "grid", gridTemplateColumns: showPreview ? "1fr 1fr" : "1fr", gap: "30px" }}>
-            {/* Editor */}
+          {/* Área de contenido ultra profesional */}
+          <div style={{ display: "grid", gridTemplateColumns: showPreview ? "1fr 1fr" : "1fr", gap: "40px" }}>
+            {/* Editor ultra mejorado */}
             <div>
-              <label className="block text-lg font-bold text-gray-700 mb-4">
-                ✍️ Contenido del mensaje
+              <label className="block text-xl font-black text-gray-700 mb-5">
+                ✍️ Contenido del mensaje ultra profesional
               </label>
               
               <ImageUploader onUploaded={handleImageUploaded} />
               
               <input
                 type="text"
-                placeholder="🔍 Buscar en galería de imágenes..."
+                placeholder="🔍 Buscar en galería profesional de imágenes..."
                 value={galleryFilter}
                 onChange={e => setGalleryFilter(e.target.value)}
                 style={{
-                  width: "75%",
-                  padding: "12px 18px",
-                  marginBottom: "20px",
-                  borderRadius: "12px",
-                  border: "2px solid #d1d5db",
-                  fontSize: "16px"
+                  width: "80%",
+                  padding: "15px 20px",
+                  marginBottom: "25px",
+                  borderRadius: "15px",
+                  border: "3px solid #d1d5db",
+                  fontSize: "17px",
+                  fontWeight: "600"
                 }}
               />
               
@@ -1569,11 +1940,11 @@ const EmailCompose = () => {
               />
               
               {showEmoji && (
-                <div style={{ marginBottom: "25px", borderRadius: "16px", overflow: "hidden", boxShadow: "0 8px 25px rgba(0,0,0,0.15)" }}>
+                <div style={{ marginBottom: "30px", borderRadius: "20px", overflow: "hidden", boxShadow: "0 12px 30px rgba(0,0,0,0.2)" }}>
                   <EmojiPicker 
                     onEmojiClick={handleEmoji}
                     width="100%"
-                    height="400px"
+                    height="450px"
                   />
                 </div>
               )}
@@ -1587,161 +1958,172 @@ const EmailCompose = () => {
                   modules={quillModules}
                   formats={quillFormats}
                   style={{ 
-                    minHeight: "500px",
-                    borderRadius: "16px",
+                    minHeight: "600px",
+                    borderRadius: "20px",
                     overflow: "hidden",
-                    boxShadow: "0 8px 25px rgba(0,0,0,0.12)",
+                    boxShadow: "0 12px 30px rgba(0,0,0,0.15)",
                     background: "white"
                   }}
-                  placeholder="Escribe tu mensaje profesional aquí... Usa herramientas avanzadas de formato."
+                  placeholder="✨ Escribe tu mensaje ultra profesional aquí... Las imágenes se pueden mover arrastrando, redimensionar y editar con herramientas avanzadas."
                 />
               ) : (
                 <textarea
                   value={formData.body}
                   onChange={(e) => handlePlainTextChange(e.target.value)}
-                  placeholder="Escribe tu mensaje en texto simple..."
+                  placeholder="📝 Escribe tu mensaje profesional en texto plano... También puedes incluir referencias a imágenes."
                   style={{
                     width: "100%",
-                    minHeight: "500px",
-                    padding: "25px",
-                    borderRadius: "16px",
-                    border: "3px solid #e5e7eb",
-                    fontSize: "18px",
+                    minHeight: "600px",
+                    padding: "30px",
+                    borderRadius: "20px",
+                    border: "4px solid #e5e7eb",
+                    fontSize: "19px",
                     fontFamily: "'Fira Code', monospace",
-                    lineHeight: "1.7",
+                    lineHeight: "1.8",
                     resize: "vertical",
-                    boxShadow: "0 8px 25px rgba(0,0,0,0.12)",
+                    boxShadow: "0 12px 30px rgba(0,0,0,0.15)",
                     background: "white"
                   }}
                 />
               )}
             </div>
 
-            {/* Vista previa mejorada */}
+            {/* Vista previa ultra realista */}
             {showPreview && (
               <div>
-                <label className="block text-lg font-bold text-gray-700 mb-4">
-                  👁️ Vista previa profesional
+                <label className="block text-xl font-black text-gray-700 mb-5">
+                  👁️ Vista previa ultra realista en tiempo real
                 </label>
                 
                 <div style={{
-                  border: "3px solid #e5e7eb",
-                  borderRadius: "20px",
-                  minHeight: "500px",
+                  border: "4px solid #e5e7eb",
+                  borderRadius: "25px",
+                  minHeight: "600px",
                   backgroundColor: "#fafafa",
-                  boxShadow: "0 8px 25px rgba(0,0,0,0.12)",
+                  boxShadow: "0 12px 30px rgba(0,0,0,0.15)",
                   overflow: "hidden"
                 }}>
-                  {/* Header del email */}
+                  {/* Header del email ultra profesional */}
                   <div style={{
-                    borderBottom: "2px solid #e5e7eb",
-                    paddingBottom: "20px",
-                    padding: "25px",
+                    borderBottom: "3px solid #e5e7eb",
+                    paddingBottom: "25px",
+                    padding: "30px",
                     background: "white"
                   }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "15px", marginBottom: "15px" }}>
                       <div style={{
-                        width: "40px",
-                        height: "40px",
+                        width: "50px",
+                        height: "50px",
                         borderRadius: "50%",
                         background: "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
                         color: "white",
-                        fontWeight: "800",
-                        fontSize: "16px"
+                        fontWeight: "900",
+                        fontSize: "18px",
+                        boxShadow: "0 4px 15px rgba(79, 70, 229, 0.4)"
                       }}>
                         {mailboxes.find(m => m.id === parseInt(formData.mailbox_id))?.name?.charAt(0) || "U"}
                       </div>
                       <div>
-                        <div style={{ fontSize: "16px", fontWeight: "700", color: "#1f2937" }}>
-                          {mailboxes.find(m => m.id === parseInt(formData.mailbox_id))?.name || "Usuario"}
+                        <div style={{ fontSize: "18px", fontWeight: "800", color: "#1f2937" }}>
+                          {mailboxes.find(m => m.id === parseInt(formData.mailbox_id))?.name || "Usuario Profesional"}
                         </div>
-                        <div style={{ fontSize: "14px", color: "#6b7280" }}>
+                        <div style={{ fontSize: "15px", color: "#6b7280", fontWeight: "600" }}>
                           {mailboxes.find(m => m.id === parseInt(formData.mailbox_id))?.email || "usuario@empresa.com"}
                         </div>
                       </div>
                     </div>
                     
-                    <div style={{ marginBottom: "8px" }}>
-                      <span style={{ fontSize: "14px", color: "#9ca3af", fontWeight: "600" }}>Para: </span>
-                      <span style={{ fontSize: "14px", color: "#1f2937", fontWeight: "600" }}>{formData.to || "destinatario@empresa.com"}</span>
+                    <div style={{ marginBottom: "10px" }}>
+                      <span style={{ fontSize: "15px", color: "#9ca3af", fontWeight: "700" }}>Para: </span>
+                      <span style={{ fontSize: "15px", color: "#1f2937", fontWeight: "700" }}>{formData.to || "destinatario@empresa.com"}</span>
                     </div>
                     
                     {formData.cc && (
-                      <div style={{ marginBottom: "8px" }}>
-                        <span style={{ fontSize: "14px", color: "#9ca3af", fontWeight: "600" }}>CC: </span>
-                        <span style={{ fontSize: "14px", color: "#1f2937", fontWeight: "600" }}>{formData.cc}</span>
+                      <div style={{ marginBottom: "10px" }}>
+                        <span style={{ fontSize: "15px", color: "#9ca3af", fontWeight: "700" }}>CC: </span>
+                        <span style={{ fontSize: "15px", color: "#1f2937", fontWeight: "700" }}>{formData.cc}</span>
                       </div>
                     )}
                     
-                    <div style={{ fontSize: "18px", fontWeight: "800", color: "#1f2937", marginTop: "15px" }}>
-                      {formData.subject || "Tu asunto aparecerá aquí..."}
+                    <div style={{ fontSize: "20px", fontWeight: "900", color: "#1f2937", marginTop: "18px" }}>
+                      {formData.subject || "Tu asunto ultra profesional aparecerá aquí..."}
                     </div>
                     
                     {formData.priority !== 'normal' && (
                       <div style={{
-                        marginTop: "10px",
+                        marginTop: "12px",
                         display: "inline-block",
-                        padding: "4px 12px",
-                        borderRadius: "20px",
-                        fontSize: "12px",
-                        fontWeight: "700",
+                        padding: "6px 15px",
+                        borderRadius: "25px",
+                        fontSize: "13px",
+                        fontWeight: "800",
                         backgroundColor: formData.priority === 'high' ? "#fef2f2" : "#f0f9ff",
-                        color: formData.priority === 'high' ? "#dc2626" : "#1e40af"
+                        color: formData.priority === 'high' ? "#dc2626" : "#1e40af",
+                        boxShadow: "0 4px 15px rgba(0,0,0,0.1)"
                       }}>
-                        {formData.priority === 'high' ? "🔴 ALTA PRIORIDAD" : "🟢 BAJA PRIORIDAD"}
+                        {formData.priority === 'high' ? "🔴 MÁXIMA PRIORIDAD" : "🟢 BAJA PRIORIDAD"}
                       </div>
                     )}
                   </div>
                   
-                  {/* Contenido del email */}
-                  <div style={{ padding: "25px" }}>
+                  {/* Contenido del email ultra realista */}
+                  <div style={{ padding: "30px" }}>
                     <div 
                       dangerouslySetInnerHTML={{ 
-                        __html: formData.body || "<p style='color: #9ca3af; font-style: italic; text-align: center; padding: 60px 20px;'>👆 El contenido aparecerá aquí conforme escribas...<br/>¡Usa las herramientas profesionales para crear emails impactantes!</p>" 
+                        __html: formData.body || "<div style='color: #9ca3af; font-style: italic; text-align: center; padding: 80px 25px; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-radius: 16px; border: 2px dashed #cbd5e1;'><div style='font-size: 48px; margin-bottom: 20px;'>✨</div><h3 style='margin: 0 0 15px 0; font-size: 22px; font-weight: 800;'>Tu contenido ultra profesional aparecerá aquí</h3><p style='margin: 0; font-size: 16px;'>¡Usa todas las herramientas avanzadas para crear emails impactantes!<br/>Las imágenes se pueden arrastrar, redimensionar y editar profesionalmente.</p></div>" 
                       }} 
                       style={{ 
-                        fontSize: "16px",
-                        lineHeight: "1.7",
-                        minHeight: "200px",
+                        fontSize: "17px",
+                        lineHeight: "1.8",
+                        minHeight: "250px",
                         color: "#374151"
                       }} 
                     />
                   </div>
                 </div>
                 
-                {/* Estadísticas detalladas */}
+                {/* Estadísticas ultra detalladas */}
                 <div style={{
-                  marginTop: "20px",
-                  padding: "20px",
-                  backgroundColor: "#f0f9ff",
-                  borderRadius: "16px",
-                  border: "2px solid #3b82f6",
-                  fontSize: "14px"
+                  marginTop: "25px",
+                  padding: "25px",
+                  background: "linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)",
+                  borderRadius: "20px",
+                  border: "3px solid #3b82f6",
+                  fontSize: "15px",
+                  boxShadow: "0 8px 25px rgba(59, 130, 246, 0.2)"
                 }}>
-                  <h4 style={{ margin: "0 0 15px 0", fontSize: "16px", fontWeight: "800", color: "#1e40af" }}>
-                    📊 Estadísticas avanzadas
+                  <h4 style={{ margin: "0 0 20px 0", fontSize: "20px", fontWeight: "900", color: "#1e40af" }}>
+                    📊 Estadísticas ultra avanzadas en tiempo real
                   </h4>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "15px" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "20px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between" }}>
-                      <span style={{ fontWeight: "600" }}>📝 Palabras:</span>
+                      <span style={{ fontWeight: "700" }}>📝 Palabras:</span>
                       <strong style={{ color: "#1e40af" }}>{emailAnalysis.wordCount}</strong>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between" }}>
-                      <span style={{ fontWeight: "600" }}>🔤 Caracteres:</span>
+                      <span style={{ fontWeight: "700" }}>🔤 Caracteres:</span>
                       <strong style={{ color: "#1e40af" }}>{emailAnalysis.charCount}</strong>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between" }}>
-                      <span style={{ fontWeight: "600" }}>📧 Asunto:</span>
+                      <span style={{ fontWeight: "700" }}>📧 Asunto:</span>
                       <strong style={{ color: formData.subject.length >= 30 && formData.subject.length <= 50 ? "#10b981" : "#f59e0b" }}>
                         {formData.subject.length}/50
                       </strong>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between" }}>
-                      <span style={{ fontWeight: "600" }}>⏱️ Lectura:</span>
+                      <span style={{ fontWeight: "700" }}>⏱️ Lectura:</span>
                       <strong style={{ color: "#10b981" }}>{emailAnalysis.readingTime} min</strong>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span style={{ fontWeight: "700" }}>🖼️ Imágenes:</span>
+                      <strong style={{ color: "#8b5cf6" }}>{emailAnalysis.imageCount}</strong>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span style={{ fontWeight: "700" }}>🔗 Enlaces:</span>
+                      <strong style={{ color: "#f59e0b" }}>{emailAnalysis.linkCount}</strong>
                     </div>
                   </div>
                 </div>
@@ -1749,34 +2131,35 @@ const EmailCompose = () => {
             )}
           </div>
 
-          {/* Botones de acción profesionales */}
+          {/* Botones de acción ultra profesionales */}
           <div style={{
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            paddingTop: "40px",
-            borderTop: "3px solid #f3f4f6",
-            marginTop: "40px"
+            paddingTop: "50px",
+            borderTop: "4px solid #f3f4f6",
+            marginTop: "50px"
           }}>
-            <div style={{ display: "flex", gap: "20px" }}>
+            <div style={{ display: "flex", gap: "25px" }}>
               <button
                 type="button"
                 onClick={handleSaveDraft}
                 disabled={saveAsDraft}
                 style={{
-                  backgroundColor: "#6b7280",
+                  background: "linear-gradient(135deg, #6b7280 0%, #4b5563 100%)",
                   color: "white",
-                  padding: "18px 32px",
-                  borderRadius: "16px",
+                  padding: "20px 40px",
+                  borderRadius: "20px",
                   border: "none",
                   cursor: saveAsDraft ? "not-allowed" : "pointer",
-                  fontSize: "18px",
-                  fontWeight: "700",
+                  fontSize: "19px",
+                  fontWeight: "800",
                   opacity: saveAsDraft ? 0.7 : 1,
-                  boxShadow: "0 4px 15px rgba(107, 114, 128, 0.3)"
+                  boxShadow: "0 8px 25px rgba(107, 114, 128, 0.4)",
+                  transition: "all 0.3s ease"
                 }}
               >
-                {saveAsDraft ? "💾 Guardando..." : "💾 Guardar Borrador"}
+                {saveAsDraft ? "💾 Guardando borrador..." : "💾 Guardar Borrador Pro"}
               </button>
             </div>
 
@@ -1784,42 +2167,52 @@ const EmailCompose = () => {
               type="submit"
               disabled={loading}
               style={{
-                background: loading ? "#9ca3af" : "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                background: loading 
+                  ? "#9ca3af" 
+                  : "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
                 color: "white",
-                padding: "20px 50px",
-                borderRadius: "20px",
+                padding: "22px 60px",
+                borderRadius: "25px",
                 border: "none",
                 cursor: loading ? "not-allowed" : "pointer",
-                fontSize: "22px",
+                fontSize: "24px",
                 fontWeight: "900",
-                boxShadow: loading ? "none" : "0 15px 35px rgba(102, 126, 234, 0.5)",
-                transform: loading ? "none" : "translateY(-3px)",
-                transition: "all 0.3s ease",
+                boxShadow: loading 
+                  ? "none" 
+                  : "0 20px 40px rgba(102, 126, 234, 0.6)",
+                transform: loading ? "none" : "translateY(-5px)",
+                transition: "all 0.4s ease",
                 textTransform: "uppercase",
-                letterSpacing: "1px"
+                letterSpacing: "1.5px"
               }}
             >
-              {loading ? '📤 Enviando...' : (scheduledSend ? '⏰ Programar Envío' : '🚀 Enviar Email Pro')}
+              {loading 
+                ? '📤 Enviando email...' 
+                : (scheduledSend 
+                    ? '⏰ Programar Envío Pro' 
+                    : '🚀 Enviar Email Ultra Pro'
+                  )
+              }
             </button>
           </div>
 
-          {/* Mensaje de estado mejorado */}
+          {/* Mensaje de estado ultra mejorado */}
           {status && (
             <div 
               style={{
-                padding: "25px 30px",
-                borderRadius: "20px",
-                fontSize: "18px",
-                fontWeight: "700",
+                padding: "30px 40px",
+                borderRadius: "25px",
+                fontSize: "20px",
+                fontWeight: "800",
                 textAlign: "center",
-                marginTop: "30px",
+                marginTop: "40px",
                 backgroundColor: status.includes("Error") || status.includes("❌") 
                   ? "#fef2f2" : "#f0fff4",
                 color: status.includes("Error") || status.includes("❌")
                   ? "#dc2626" : "#065f46",
                 border: status.includes("Error") || status.includes("❌")
-                  ? "3px solid #fecaca" : "3px solid #bbf7d0",
-                boxShadow: "0 8px 25px rgba(0,0,0,0.1)"
+                  ? "4px solid #fecaca" : "4px solid #bbf7d0",
+                boxShadow: "0 12px 30px rgba(0,0,0,0.15)"
               }}
             >
               {status}
@@ -1828,7 +2221,7 @@ const EmailCompose = () => {
         </form>
       </div>
 
-      {/* Paneles flotantes */}
+      {/* Paneles flotantes ultra profesionales */}
       {showSnippets && (
         <SnippetsPanel
           onSelectSnippet={handleSnippetSelect}
