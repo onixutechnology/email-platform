@@ -5,6 +5,7 @@ import smtplib
 import asyncio
 import boto3
 import requests
+import httpx
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -176,83 +177,71 @@ class EmailSender:
             return {"success": False, "error": error_msg}
 
     @staticmethod
-    async def send_via_ses(mailbox: Mailbox, to_email: str, subject: str, 
-                          body: str, html_body: Optional[str] = None) -> Dict[str, Any]:
+    async def send_via_sendgrid_api(mailbox: Mailbox, to_email: str, subject: str, 
+                                  body: str, html_body: Optional[str] = None,
+                                  cc: Optional[List[str]] = None, 
+                                  bcc: Optional[List[str]] = None) -> Dict[str, Any]:
         try:
             settings = json.loads(mailbox.settings)
-            aws_access_key = settings.get('access_key_id')
-            aws_secret_key = settings.get('secret_access_key')
-            region = settings.get('region', 'us-east-1')
-            if not all([aws_access_key, aws_secret_key]):
-                raise Exception("Credenciales AWS SES incompletas")
-            ses_client = boto3.client(
-                'ses',
-                aws_access_key_id=aws_access_key,
-                aws_secret_access_key=aws_secret_key,
-                region_name=region
-            )
-            destination = {'ToAddresses': [to_email]}
-            message = {
-                'Subject': {'Data': subject, 'Charset': 'UTF-8'},
-                'Body': {}
+            api_key = settings.get('sendgrid_api_key') or os.getenv('SENDGRID_API_KEY')
+            
+            if not api_key:
+                raise Exception("SendGrid API key no configurada")
+            
+            logger.info(f"🔄 Enviando desde: {mailbox.email}")
+            logger.info(f"🔄 Autenticando con SendGrid API")
+            logger.info(f"🔄 Conectando a: SendGrid REST API")
+            logger.info(f"   Proveedor: sendgrid")
+            logger.info(f"   Hacia: {to_email}")
+            logger.info(f"   Desde: {mailbox.email}")
+
+            # Estructura del email para SendGrid API
+            data = {
+                "personalizations": [{
+                    "to": [{"email": to_email}],
+                    "subject": subject
+                }],
+                "from": {"email": mailbox.email, "name": mailbox.name or "ONIXU Marketing"},
+                "content": []
             }
+            
+            # Agregar CC y BCC si existen
+            if cc:
+                data["personalizations"][0]["cc"] = [{"email": email} for email in cc]
+            if bcc:
+                data["personalizations"][0]["bcc"] = [{"email": email} for email in bcc]
+            
+            # Agregar contenido
+            if body:
+                data["content"].append({"type": "text/plain", "value": body})
             if html_body:
-                message['Body']['Html'] = {'Data': html_body, 'Charset': 'UTF-8'}
-            else:
-                message['Body']['Text'] = {'Data': body, 'Charset': 'UTF-8'}
-            response = ses_client.send_email(
-                Source=mailbox.email,
-                Destination=destination,
-                Message=message
-            )
-            logger.info(f"✅ Email SES enviado: {response['MessageId']}")
-            return {"success": True, "message_id": response['MessageId']}
-        except ClientError as e:
-            error_msg = f"Error AWS SES: {e.response['Error']['Message']}"
-            logger.error(f"❌ {error_msg}")
-            return {"success": False, "error": error_msg}
+                data["content"].append({"type": "text/html", "value": html_body})
+            
+            # Enviar usando httpx
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    "https://api.sendgrid.com/v3/mail/send",
+                    headers={
+                        "Authorization": f"Bearer {api_key}",
+                        "Content-Type": "application/json"
+                    },
+                    json=data,
+                    timeout=30
+                )
+                
+                if response.status_code in [200, 202]:
+                    logger.info(f"✅ Email SendGrid API enviado exitosamente")
+                    return {"success": True, "status_code": response.status_code}
+                else:
+                    error_msg = f"SendGrid API error: {response.status_code} - {response.text}"
+                    logger.error(f"❌ {error_msg}")
+                    return {"success": False, "error": error_msg}
+                    
         except Exception as e:
-            error_msg = f"Error SES: {str(e)}"
+            error_msg = f"Error SendGrid API: {str(e)}"
             logger.error(f"❌ {error_msg}")
             return {"success": False, "error": error_msg}
 
-    @staticmethod
-    async def send_via_mailgun(mailbox: Mailbox, to_email: str, subject: str, 
-                              body: str, html_body: Optional[str] = None) -> Dict[str, Any]:
-        try:
-            settings = json.loads(mailbox.settings)
-            api_key = settings.get('api_key')
-            domain = settings.get('domain')
-            base_url = settings.get('base_url', 'https://api.mailgun.net/v3')
-            if not all([api_key, domain]):
-                raise Exception("Configuración Mailgun incompleta")
-            url = f"{base_url}/{domain}/messages"
-            data = {
-                'from': mailbox.email,
-                'to': to_email,
-                'subject': subject,
-                'text': body
-            }
-            if html_body:
-                data['html'] = html_body
-            response = requests.post(
-                url,
-                auth=('api', api_key),
-                data=data,
-                timeout=30
-            )
-            if response.status_code == 200:
-                result = response.json()
-                logger.info(f"✅ Email Mailgun enviado: {result.get('id')}")
-                return {"success": True, "message_id": result.get('id')}
-            else:
-                error_msg = f"Error Mailgun: {response.status_code} - {response.text}"
-                logger.error(f"❌ {error_msg}")
-                return {"success": False, "error": error_msg}
-        except Exception as e:
-            error_msg = f"Error Mailgun: {str(e)}"
-            logger.error(f"❌ {error_msg}")
-            return {"success": False, "error": error_msg}
 
 async def send_email_background(
     to_email: str,
@@ -293,9 +282,10 @@ async def send_email_background(
             logger.warning(f"⚠️ Mailbox {mailbox.email} no está verificado")
         sender = EmailSender()
         provider_lower = mailbox.provider.lower()
-        if provider_lower in ['gmail', 'outlook', 'yahoo', 'smtp']:
-            result = await sender.send_via_smtp(
-                mailbox, to_email, subject, body, html_body, cc, bcc, attachments
+        if provider_lower in ['gmail', 'outlook', 'yahoo', 'smtp'] or mailbox.provider.lower() == 'sendgrid':
+            # Usar SendGrid API para todos los casos (más rápido que SMTP)
+            result = await sender.send_via_sendgrid_api(
+                mailbox, to_email, subject, body, html_body, cc, bcc
             )
         elif provider_lower == 'ses':
             result = await sender.send_via_ses(
