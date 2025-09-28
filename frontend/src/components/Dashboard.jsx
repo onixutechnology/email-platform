@@ -15,25 +15,26 @@ const Dashboard = ({ children }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="dashboard-layout" style={{ background: 'var(--main-bg)', minHeight: '100vh' }}>
       <Sidebar />
-      
-      <div className="lg:pl-64">
+      <div style={{ marginLeft: 245 }}>
         <Header />
-        
-        <main className="py-6">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="mb-6">
-              <h1 className="text-2xl font-semibold text-gray-900">
-                Bienvenido, {user?.full_name || user?.username || 'Usuario'}
-              </h1>
-              <p className="mt-1 text-sm text-gray-600">
-                Panel de {getRoleTitle()}
-              </p>
+        <main style={{ padding: '2.2rem 0', minHeight: '60vh' }}>
+          <div className="card" style={{ maxWidth: 800, margin: '0 auto 1.6rem', boxShadow: 'var(--card-shadow)', animation: 'fadeInCard 0.6s'}}>
+            <div className="card-header" style={{ fontSize: 26 }}>
+              Bienvenido, <span className="profile-avatar" style={{
+                verticalAlign: 'middle',
+                marginRight: 8,
+                width: 32, height: 32,
+                background: '#e4e8f0'
+              }}>{user?.full_name?.charAt(0) || user?.username?.charAt(0) || 'U'}</span>
+              {user?.full_name || user?.username || 'Usuario'}
             </div>
-            
-            {children}
+            <p style={{ marginTop: 8, color: 'var(--primary)', fontWeight: 500, fontSize: 19 }}>
+              Panel de {getRoleTitle()}
+            </p>
           </div>
+          <div className="dashboard-content">{children}</div>
         </main>
       </div>
     </div>
