@@ -23,8 +23,8 @@ app = FastAPI(
 # ✅ CONFIGURACIÓN CORS MUY PERMISIVA TEMPORAL
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Permitir TODOS los orígenes
-    allow_credentials=False,  # OBLIGATORIO: False si usas "*"
+    allow_origins=["https://email-platform-na5m.onrender.com"],  # Permitir TODOS los orígenes
+    allow_credentials=True,  # OBLIGATORIO: False si usas "*"
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
     expose_headers=["*"]
