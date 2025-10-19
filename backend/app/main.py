@@ -20,15 +20,16 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# ✅ CONFIGURACIÓN CORS MUY PERMISIVA TEMPORAL
+# CORS CONFIGURADO SOLO PARA FRONTEND DE PRODUCCIÓN
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://email-platform-na5m.onrender.com"],  # Permitir TODOS los orígenes
-    allow_credentials=True,  # OBLIGATORIO: False si usas "*"
+    allow_origins=["https://email-platform-na5m.onrender.com"],  # Solo frontend autorizado
+    allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
     expose_headers=["*"]
 )
+print("CORS origins permitidos:", ["https://email-platform-na5m.onrender.com"])
 
 # Archivos estáticos DESPUÉS de CORS
 app.mount("/static", StaticFiles(directory="uploads"), name="static")
@@ -46,7 +47,7 @@ def root():
     return {
         "service": "Email Platform API", 
         "status": "online", 
-        "cors": "enabled_wildcard"
+        "cors": "enabled"
     }
 
 @app.on_event("startup")
@@ -57,7 +58,7 @@ async def startup_event():
             await conn.run_sync(Base.metadata.create_all)
         print("✅ Tablas creadas/verificadas exitosamente y MongoDB conectado!")
         print("📬 Sistema de tracking de emails activado")
-        print("🌐 CORS configurado con wildcard para debugging")
+        print("🌐 CORS configurado explícitamente para frontend de producción")
     except Exception as e:
         print(f"❌ Error durante el startup: {e}")
 
